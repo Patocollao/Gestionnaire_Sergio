@@ -176,7 +176,40 @@ tbody td { padding: 11px 15px; }
 .aide-sec code.inline { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 13px; border: 1px solid var(--border); }
 .aide-sec pre { background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: var(--radius-sm); overflow-x: auto; font-size: 12px; font-family: monospace; margin: 14px 0; }
 
-@media(max-width:700px){ .main { padding: 14px; } .g2,.g4 { grid-template-columns: 1fr; } .header,.tabs { padding-left: 16px; padding-right: 16px; } }
+/* ── CALENDAR CSS ── */
+.cal-wrapper { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+.cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.cal-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--text); }
+.cal-nav { display: flex; gap: 6px; }
+.cal-nav-btn { background: var(--surface2); border: 1px solid var(--border); padding: 6px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.cal-nav-btn:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+.cal-nav-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 16px; }
+.cal-day-header { text-align: center; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); padding: 8px 0; }
+.cal-day { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; min-height: 85px; position: relative; transition: all .2s; cursor: default; }
+.cal-day.empty { background: #fafafa; opacity: .5; }
+.cal-day.has-sessions { background: var(--accent-light); border-color: var(--accent2); }
+.cal-day.has-sessions:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(45,106,79,.15); }
+.cal-day-num { font-size: 12px; font-weight: 700; color: var(--text3); margin-bottom: 6px; }
+.cal-day.has-sessions .cal-day-num { color: var(--accent); }
+.cal-day-count { position: absolute; top: 8px; right: 8px; background: var(--accent); color: white; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px; }
+.cal-day-clients { display: flex; flex-direction: column; gap: 3px; }
+.cal-client-pill { background: white; border: 1px solid var(--accent2); border-radius: 4px; padding: 3px 6px; font-size: 11px; font-weight: 600; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding-top: 16px; border-top: 1px solid var(--border); }
+.cal-stat-item { text-align: center; }
+.cal-stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 4px; }
+.cal-stat-value { font-size: 16px; font-weight: 700; color: var(--accent); }
+
+@media(max-width:700px){ 
+  .main { padding: 14px; } 
+  .g2,.g4 { grid-template-columns: 1fr; } 
+  .header,.tabs { padding-left: 16px; padding-right: 16px; } 
+  .cal-grid { grid-template-columns: repeat(7, 1fr); gap: 4px; } 
+  .cal-day { padding: 6px; min-height: 70px; } 
+  .cal-client-pill { font-size: 9px; padding: 2px 4px; } 
+  .cal-day-count { font-size: 9px; padding: 1px 4px; }
+  .cal-stats { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
@@ -218,7 +251,6 @@ tbody td { padding: 11px 15px; }
 
 <div class="main">
 
-<!-- ══ SESSIONS ══ -->
 <div class="page active" id="page-sessions">
   <div class="g2" style="align-items:start">
     <div class="card">
@@ -230,7 +262,6 @@ tbody td { padding: 11px 15px; }
         <input type="date" class="fc" id="sDate" onchange="loadTodaySessions()">
       </div>
 
-      <!-- ── CLIENT AUTOCOMPLETE ── -->
       <div class="fg">
         <label class="fl">Client * <span id="clientValidIcon" style="color:var(--accent);display:none">✓ Sélectionné</span></label>
         <div class="client-autocomplete">
@@ -300,7 +331,6 @@ tbody td { padding: 11px 15px; }
   </div>
 </div>
 
-<!-- ══ FACTURE ══ -->
 <div class="page" id="page-facture">
   <div class="card mb20">
     <div class="flex jsb aic" style="flex-wrap:wrap;gap:12px">
@@ -343,7 +373,6 @@ tbody td { padding: 11px 15px; }
   <div class="card"><div id="factureContent"></div></div>
 </div>
 
-<!-- ══ DÉPENSES ══ -->
 <div class="page" id="page-depenses">
   <div class="g2" style="align-items:start">
     <div class="card">
@@ -415,7 +444,6 @@ tbody td { padding: 11px 15px; }
   </div>
 </div>
 
-<!-- ══ CLIENTS ══ -->
 <div class="page" id="page-clients">
   <div class="flex jsb aic mb20" style="flex-wrap:wrap;gap:12px">
     <div>
@@ -437,7 +465,6 @@ tbody td { padding: 11px 15px; }
   </div>
 </div>
 
-<!-- ══ RÉSUMÉ ══ -->
 <div class="page" id="page-resume">
   <div class="flex jsb aic mb20" style="flex-wrap:wrap;gap:12px">
     <h2 class="serif" style="font-size:23px">📊 Tableau de bord fiscal</h2>
@@ -457,16 +484,24 @@ tbody td { padding: 11px 15px; }
     <div class="card-title" style="font-size:16px">💡 Économie fiscale de vos dépenses</div>
     <div id="depEconomieContent"></div>
   </div>
+  
+  <div class="cal-wrapper">
+    <div class="cal-header">
+      <div class="cal-title">📅 Vue calendrier mensuelle</div>
+      <div class="cal-nav" id="calNav"></div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-stats" id="calStats"></div>
+  </div>
+
   <div class="g2">
     <div class="card"><div class="card-title">Clients fréquents</div><div class="card-sub">Ce mois</div><div id="topClients"></div></div>
     <div class="card"><div class="card-title">Répartition par tarif</div><div class="card-sub">Sessions par tarif</div><div id="tarifBreak"></div></div>
   </div>
 </div>
 
-<!-- ══ AIDE ══ -->
 <div class="page" id="page-aide">
 
-  <!-- SECTION: Taux 40% -->
   <div class="card aide-sec mb20">
     <h3>🏦 Pourquoi 40% — La règle de provision fiscale</h3>
     <p>La facture mensuelle affiche toujours <strong>40% à mettre de côté</strong>. Voici pourquoi ce chiffre a été choisi et comment il a été calculé.</p>
@@ -509,7 +544,6 @@ tbody td { padding: 11px 15px; }
     <p>La pestaña <strong>🎯 Stratégie</strong> utilise le même calcul TP-1 2024 mais de façon dynamique sur un revenu annuel complet. Entrez 48 semaines et votre nombre réel de patients pour voir votre taux fiscal personnalisé.</p>
   </div>
 
-  <!-- SECTION: Dépenses -->
   <div class="card aide-sec mb20">
     <h3>💳 Comment fonctionnent les dépenses déductibles</h3>
     <p>Les dépenses professionnelles (formulaire <strong>TP-80</strong>) réduisent votre revenu imposable. Chaque dollar dépensé professionnellement vous économise environ <strong>50–55 cents</strong> en impôts (selon votre taux marginal combiné QC + Fédéral).</p>
@@ -526,7 +560,6 @@ tbody td { padding: 11px 15px; }
     <p>La pestaña <strong>💳 Dépenses</strong> enregistre chaque dépense dans Google Sheets et le <strong>📊 Résumé</strong> calcule automatiquement l'économie fiscale réelle.</p>
   </div>
 
-  <!-- SECTION: Google Sheets -->
   <div class="card aide-sec mb20">
     <h3>☁️ Guide de connexion Google Sheets</h3>
     <h4>Structure des feuilles requises</h4>
@@ -545,7 +578,6 @@ tbody td { padding: 11px 15px; }
 </div>
 
 
-<!-- ══ STRATÉGIE ══ -->
 <div class="page" id="page-strategie">
   <div class="flex jsb aic mb20" style="flex-wrap:wrap;gap:12px">
     <div>
@@ -555,7 +587,6 @@ tbody td { padding: 11px 15px; }
   </div>
 
   <div class="g2" style="align-items:start">
-    <!-- Formulaire -->
     <div class="card">
       <div class="card-title">Paramètres</div>
       <div class="card-sub">Ajustez les valeurs pour simuler votre situation</div>
@@ -620,9 +651,7 @@ tbody td { padding: 11px 15px; }
       </div>
     </div>
 
-    <!-- Résultats -->
     <div>
-      <!-- KPIs principaux -->
       <div class="g2 mb20" id="stratKpis">
         <div class="stat"><div class="stat-ico">💰</div><div class="stat-lbl">Net clinique / an</div><div class="stat-val" id="skNetAn">—</div><div class="stat-sub" id="skNetAnSub">—</div></div>
         <div class="stat"><div class="stat-ico">🏛️</div><div class="stat-lbl">Impôts + cotisations</div><div class="stat-val c-red" id="skImpots">—</div><div class="stat-sub" id="skImpotsP">—</div></div>
@@ -630,7 +659,6 @@ tbody td { padding: 11px 15px; }
         <div class="stat"><div class="stat-ico">⏱️</div><div class="stat-lbl">$/heure effectif</div><div class="stat-val" id="skHeure">—</div><div class="stat-sub">après impôts</div></div>
       </div>
 
-      <!-- Semanal / Mensual -->
       <div class="card mb20">
         <div class="card-title" style="font-size:16px;margin-bottom:14px">Semanal &amp; Mensual</div>
         <div style="overflow-x:auto">
@@ -661,13 +689,11 @@ tbody td { padding: 11px 15px; }
         </div>
       </div>
 
-      <!-- Décomposition fiscale -->
       <div class="card mb20">
         <div class="card-title">Décomposition fiscale</div>
         <div id="stratFiscal"></div>
       </div>
 
-      <!-- Lecture stratégique -->
       <div class="card">
         <div class="card-title">Lecture stratégique</div>
         <div id="stratLecture"></div>
@@ -676,10 +702,7 @@ tbody td { padding: 11px 15px; }
   </div>
 </div>
 
-</div><!-- /main -->
-
-<!-- ══ MODAL CONFIG ══ -->
-<div class="mbg" id="cfgModal">
+</div><div class="mbg" id="cfgModal">
 <div class="modal">
   <div class="modal-title">⚙️ Configuration</div>
   <div class="alert alert-info">ℹ️ Paramètres sauvegardés localement dans votre navigateur.</div>
@@ -717,7 +740,6 @@ tbody td { padding: 11px 15px; }
 </div>
 </div>
 
-<!-- ══ MODAL NOUVEAU CLIENT ══ -->
 <div class="mbg" id="addClientModal">
 <div class="modal">
   <div class="modal-title">+ Nouveau client</div>
@@ -749,8 +771,10 @@ tbody td { padding: 11px 15px; }
 let cfg = {}, clients = [], sessions = [], depenses = [], isDemo = false;
 let selectedClient = null; // { Prénom, Nom, Téléphone, ... }
 let highlightedIndex = -1;
+let currentWeek = 1;
 
 const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const JOURS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 const today = (() => {
   const d = new Date();
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -1130,7 +1154,8 @@ function loadFacture() {
   const m=parseInt(document.getElementById('fMois').value);
   const y=parseInt(document.getElementById('fAnnee').value);
   const moisStr=`${MOIS[m-1]} ${y}`;
-  const sess=sessions.filter(s=>s.Mois===moisStr);
+  // SORT CRONOLÓGICO: de la fecha más antigua a la más reciente
+  const sess=sessions.filter(s=>s.Mois===moisStr).sort((a,b)=>normalizeDate(a.Date_Session).localeCompare(normalizeDate(b.Date_Session)));
 
   // Taux fiscal fixe 40% — basé sur calcul officiel TP-1 2024
   // (ImpQC + ImpFed + QPP×2 + RQAP + FSS) pour 16-20 patients/semaine
@@ -1188,7 +1213,10 @@ function exportFacture() {
   const y=parseInt(document.getElementById('fAnnee').value);
   const moisStr=`${MOIS[m-1]} ${y}`;
   const numF=`${String(m).padStart(2,'0')}-${String(y).slice(-2)}`;
-  const sess=sessions.filter(s=>s.Mois===moisStr);
+  
+  // SORT CRONOLÓGICO: de la fecha más antigua a la más reciente
+  const sess=sessions.filter(s=>s.Mois===moisStr).sort((a,b)=>normalizeDate(a.Date_Session).localeCompare(normalizeDate(b.Date_Session)));
+  
   if(!sess.length){toast('⚠️ Aucune session','warning');return;}
   const now=new Date();
   const dateStr=`${String(now.getDate()).padStart(2,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()}`;
@@ -1531,6 +1559,9 @@ function loadResume() {
     document.getElementById('depEconomieCard').style.display='none';
   }
 
+  // ── RENDER CALENDAR VIEW ──
+  renderCalendar(m, y);
+
   const freq={};
   sessMois.forEach(s=>{const k=`${s.Prénom||''} ${s.Nom||s.Client||''}`.trim();freq[k]=(freq[k]||0)+1;});
   const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5);
@@ -1547,6 +1578,121 @@ function loadResume() {
     return `<div style="margin-bottom:18px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span>Tarif ${t}</span><span><strong>${c}</strong> sess. (${pct2}%)</span></div>
     <div style="background:var(--border);border-radius:99px;height:8px"><div style="background:var(--accent);border-radius:99px;height:8px;width:${pct2}%;transition:width .4s"></div></div></div>`;
   }).join('')||'<div class="empty" style="padding:28px 0"><div class="txt-sm">Aucune donnée ce mois</div></div>';
+}
+
+function renderCalendar(month, year) {
+  const firstDay = new Date(year, month - 1, 1);
+  const lastDay = new Date(year, month, 0);
+  const daysInMonth = lastDay.getDate();
+  const startDayOfWeek = firstDay.getDay();
+  const startDay = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
+
+  const weeks = Math.ceil((daysInMonth + startDay) / 7);
+  currentWeek = 1;
+
+  const navHTML = Array.from({length: weeks}, (_, i) => 
+    `<button class="cal-nav-btn${i === 0 ? ' active' : ''}" onclick="showWeek(${i + 1})">Sem ${i + 1}</button>`
+  ).join('');
+  document.getElementById('calNav').innerHTML = navHTML;
+
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = JOURS.map(d => `<div class="cal-day-header">${d}</div>`).join('');
+
+  const moisStr = `${MOIS[month - 1]} ${year}`;
+  const monthSessions = sessions.filter(s => s.Mois === moisStr);
+
+  for (let i = 0; i < startDay; i++) {
+    grid.innerHTML += '<div class="cal-day empty"></div>';
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const daySessions = monthSessions.filter(s => normalizeDate(s.Date_Session) === dateStr);
+    
+    const hasSession = daySessions.length > 0;
+    const clients = daySessions.map(s => getConfidentialName(s));
+    const uniqueClients = [...new Set(clients)];
+    
+    const weekNum = Math.ceil((day + startDay) / 7);
+    const weekClass = weekNum === 1 ? '' : ' style="display:none"';
+    
+    grid.innerHTML += `
+      <div class="cal-day${hasSession ? ' has-sessions' : ' empty'}" data-week="${weekNum}"${weekClass}>
+        <div class="cal-day-num">${day}</div>
+        ${hasSession ? `<div class="cal-day-count">${daySessions.length}</div>` : ''}
+        <div class="cal-day-clients">
+          ${uniqueClients.map(name => `<div class="cal-client-pill">${name}</div>`).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  renderCalendarStats(monthSessions);
+}
+
+function showWeek(weekNum) {
+  currentWeek = weekNum;
+  document.querySelectorAll('.cal-nav-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i + 1 === weekNum);
+  });
+  document.querySelectorAll('.cal-day').forEach(day => {
+    const dayWeek = parseInt(day.getAttribute('data-week'));
+    day.style.display = dayWeek === weekNum ? '' : 'none';
+  });
+}
+
+function renderCalendarStats(monthSessions) {
+  if (monthSessions.length === 0) {
+    document.getElementById('calStats').innerHTML = '<div class="empty" style="padding:20px 0;grid-column:1/-1"><div class="txt-sm">Aucune session ce mois</div></div>';
+    return;
+  }
+
+  const dayCount = {};
+  const clientCount = {};
+
+  monthSessions.forEach(s => {
+    // Parseo local forzado (UTC bug)
+    const [y, m, dNum] = normalizeDate(s.Date_Session).split('-');
+    const date = new Date(y, m - 1, dNum);
+    const dayName = JOURS[date.getDay() === 0 ? 6 : date.getDay() - 1];
+    dayCount[dayName] = (dayCount[dayName] || 0) + 1;
+
+    const name = getConfidentialName(s);
+    clientCount[name] = (clientCount[name] || 0) + 1;
+  });
+
+  const busiestDay = Object.entries(dayCount).sort((a, b) => b[1] - a[1])[0];
+  const topClient = Object.entries(clientCount).sort((a, b) => b[1] - a[1])[0];
+
+  const weekSessions = {};
+  monthSessions.forEach(s => {
+    const [y, m, dNum] = normalizeDate(s.Date_Session).split('-');
+    const date = new Date(y, m - 1, dNum);
+    const day = date.getDate();
+    const startDayOfWeek = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+    const startDay = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
+    const weekNum = Math.ceil((day + startDay) / 7);
+    weekSessions[weekNum] = (weekSessions[weekNum] || 0) + 1;
+  });
+  const topWeek = Object.entries(weekSessions).sort((a, b) => b[1] - a[1])[0];
+
+  document.getElementById('calStats').innerHTML = `
+    <div class="cal-stat-item">
+      <div class="cal-stat-label">Jour le plus chargé</div>
+      <div class="cal-stat-value">${busiestDay[1]}</div>
+      <div class="txt-xs txt-muted">${busiestDay[0]} · ${busiestDay[1]} sessions</div>
+    </div>
+    <div class="cal-stat-item">
+      <div class="cal-stat-label">Client le plus fréquent</div>
+      <div class="cal-stat-value">${topClient[1]}</div>
+      <div class="txt-xs txt-muted">${topClient[0]}</div>
+    </div>
+    <div class="cal-stat-item">
+      <div class="cal-stat-label">Semaine la plus productive</div>
+      <div class="cal-stat-value">Sem ${topWeek[0]}</div>
+      <div class="txt-xs txt-muted">${topWeek[1]} sessions</div>
+    </div>
+  `;
 }
 
 // ════════════════════════════════════════════════════════
@@ -1577,7 +1723,10 @@ function editSession(i) {
   else if(t===150)document.getElementById('et150').classList.add('active');
   else document.getElementById('etOther').classList.add('active');
   updateEditPreview();
-  document.getElementById('editSessionModal').classList.add('open');
+  // Requiere contenedor HTML id="editSessionModal" definido
+  const modalEl = document.getElementById('editSessionModal');
+  if (modalEl) modalEl.classList.add('open');
+  else toast('⚠️ El modal de edición no existe en el DOM HTML', 'warning');
 }
 
 function setEditTarif(val){

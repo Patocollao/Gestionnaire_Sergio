@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestionnaire — Clinique Réseau 360</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f1ed; --surface: #ffffff; --surface2: #faf8f5; --border: #e6e0d6;
+  --accent: #2d6a4f; --accent2: #52b788; --accent-light: #d8f3dc;
+  --text: #1c1c1c; --text2: #555; --text3: #999;
+  --danger: #c0392b; --warning: #d68910;
+  --shadow: 0 2px 14px rgba(0,0,0,0.06); --radius: 14px; --radius-sm: 9px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+.header { background: var(--accent); color: white; padding: 0 32px; height: 62px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 16px rgba(45,106,79,0.35); }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-icon { width: 36px; height: 36px; background: rgba(255,255,255,0.18); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+.brand-name { font-family: 'DM Serif Display', serif; font-size: 19px; }
+.brand-sub { font-size: 11px; opacity: .65; letter-spacing: .07em; text-transform: uppercase; }
+.header-actions { display: flex; gap: 10px; align-items: center; }
+.hbtn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: white; border-radius: 20px; padding: 6px 15px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background .2s; }
+.hbtn:hover { background: rgba(255,255,255,0.28); }
+.hbtn-solid { background: white; color: var(--accent); font-weight: 600; }
+.hbtn-solid:hover { background: #f0faf5; }
+
+#setupBanner { background: #fff8e1; border-bottom: 2px solid #f6c90e; padding: 11px 32px; font-size: 13px; color: #7a5900; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+#setupBanner a { color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: underline; }
+
+.tabs { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; display: flex; gap: 2px; overflow-x: auto; }
+.tab { padding: 15px 18px; font-size: 14px; font-weight: 500; cursor: pointer; border-bottom: 2.5px solid transparent; color: var(--text2); transition: all .18s; display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+.tab:hover { color: var(--accent); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+.main { padding: 26px 32px; max-width: 1080px; margin: 0 auto; }
+.page { display: none; }
+.page.active { display: block; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); }
+.card + .card { margin-top: 18px; }
+.card-title { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 5px; }
+.card-sub { font-size: 13px; color: var(--text3); margin-bottom: 20px; }
+
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+
+.fg { margin-bottom: 17px; }
+.fl { display: block; font-size: 11.5px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+.fc { width: 100%; padding: 10px 13px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--surface2); transition: border-color .18s, box-shadow .18s; appearance: none; }
+.fc:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(45,106,79,.1); background: white; }
+.fc::placeholder { color: var(--text3); }
+select.fc { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23999' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+/* ── CLIENT AUTOCOMPLETE ── */
+.client-autocomplete { position: relative; }
+.client-input-wrap { position: relative; }
+.client-input-wrap .search-ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 14px; pointer-events: none; }
+.client-input-wrap .fc { padding-left: 36px; padding-right: 36px; }
+.client-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text3); cursor: pointer; font-size: 16px; padding: 0; line-height: 1; display: none; }
+.client-clear.visible { display: block; }
+.client-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: white; border: 1.5px solid var(--accent); border-radius: var(--radius-sm); box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 50; max-height: 220px; overflow-y: auto; display: none; }
+.client-dropdown.open { display: block; }
+.client-option { padding: 10px 14px; cursor: pointer; font-size: 14px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; transition: background .1s; }
+.client-option:last-child { border-bottom: none; }
+.client-option:hover, .client-option.highlighted { background: var(--accent-light); }
+.client-option .opt-name { font-weight: 600; color: var(--text); }
+.client-option .opt-detail { font-size: 11.5px; color: var(--text3); }
+.client-option .opt-match { color: var(--accent); }
+.client-selected-badge { display: none; align-items: center; gap: 8px; background: var(--accent-light); border: 1px solid var(--accent2); border-radius: var(--radius-sm); padding: 8px 12px; margin-top: 8px; font-size: 13px; }
+.client-selected-badge.visible { display: flex; }
+.client-selected-badge .badge-name { font-weight: 600; color: var(--accent); flex: 1; }
+.client-selected-badge .badge-detail { font-size: 11.5px; color: var(--text2); }
+.no-results { padding: 14px; text-align: center; color: var(--text3); font-size: 13px; }
+
+.btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; border: none; transition: all .18s; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: #235a41; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(45,106,79,.28); }
+.btn-secondary { background: var(--surface2); color: var(--text); border: 1.5px solid var(--border); }
+.btn-secondary:hover { background: var(--border); }
+.btn-outline { background: transparent; color: var(--accent); border: 1.5px solid var(--accent); }
+.btn-outline:hover { background: var(--accent-light); }
+.btn-sm { padding: 6px 13px; font-size: 12.5px; }
+.btn-danger { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 4px 10px; font-size: 12px; }
+.btn-danger:hover { background: #fca5a5; }
+.btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+.btn-full { width: 100%; justify-content: center; }
+
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; position: relative; overflow: hidden; }
+.stat::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); }
+.stat-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text3); font-weight: 600; margin-bottom: 7px; }
+.stat-val { font-family: 'DM Serif Display', serif; font-size: 30px; line-height: 1; }
+.stat-sub { font-size: 12px; color: var(--text3); margin-top: 5px; }
+.stat-ico { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); font-size: 34px; opacity: .07; }
+
+.tw { overflow-x: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+thead th { background: var(--surface2); padding: 11px 15px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); font-weight: 600; border-bottom: 1px solid var(--border); white-space: nowrap; }
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface2); }
+tbody td { padding: 11px 15px; }
+.tfoot td { padding: 11px 15px; font-weight: 700; background: var(--surface2); border-top: 2px solid var(--border); }
+
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge-green { background: var(--accent-light); color: var(--accent); }
+.badge-gray { background: #f0f0f0; color: #777; }
+.badge-gold { background: #fff3cd; color: #856404; }
+.badge-purple { background: #f3e8ff; color: #6b21a8; }
+
+.alert { padding: 12px 16px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 18px; display: flex; align-items: flex-start; gap: 9px; line-height: 1.5; }
+.alert-info { background: #e8f4fd; border: 1px solid #bee3f8; color: #2c5282; }
+.alert-warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+.alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #14532d; }
+
+.preview { background: var(--surface2); border: 1.5px dashed var(--border); border-radius: var(--radius-sm); padding: 18px; margin-top: 14px; }
+.preview-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.preview-row:last-child { border-bottom: none; font-weight: 700; font-size: 16px; padding-top: 10px; }
+.lbl { color: var(--text2); }
+.c-red { color: var(--danger) !important; }
+.c-green { color: var(--accent) !important; }
+.c-bold { font-weight: 700; }
+
+.mbg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; align-items: center; justify-content: center; }
+.mbg.open { display: flex; }
+.modal { background: white; border-radius: var(--radius); padding: 30px; width: 540px; max-width: 96vw; max-height: 92vh; overflow-y: auto; box-shadow: 0 12px 50px rgba(0,0,0,.18); animation: su .22s ease; }
+@keyframes su { from { transform: translateY(18px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-title { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 18px; }
+.modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); }
+.cfg-sec { margin-bottom: 22px; }
+.cfg-sec-title { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text3); font-weight: 600; margin-bottom: 11px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+.inv-wrap { border: 2px solid var(--accent); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
+.inv-top { background: var(--accent); color: white; padding: 16px 22px; display: flex; justify-content: space-between; align-items: flex-start; }
+.inv-title { font-family: 'DM Serif Display', serif; font-size: 17px; }
+.inv-body { padding: 16px 22px; display: grid; grid-template-columns: 1fr auto; gap: 18px; background: white; }
+
+.spin { width: 17px; height: 17px; border: 2px solid rgba(255,255,255,.3); border-top-color: white; border-radius: 50%; animation: rot .65s linear infinite; display: inline-block; }
+@keyframes rot { to { transform: rotate(360deg); } }
+.empty { text-align: center; padding: 50px 20px; color: var(--text3); }
+.empty-ico { font-size: 44px; margin-bottom: 10px; opacity: .45; }
+.empty-title { font-size: 15px; font-weight: 600; color: var(--text2); margin-bottom: 5px; }
+
+.sw { position: relative; }
+.sw .fc { padding-left: 34px; }
+.si { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 13px; pointer-events: none; }
+
+.flex { display: flex; } .aic { align-items: center; } .jsb { justify-content: space-between; }
+.gap8 { gap: 8px; } .mb16 { margin-bottom: 16px; } .mb20 { margin-bottom: 20px; } .mt12 { margin-top: 12px; }
+.txt-sm { font-size: 13px; } .txt-xs { font-size: 11.5px; } .txt-muted { color: var(--text3); }
+.fw6 { font-weight: 600; } .serif { font-family: 'DM Serif Display', serif; }
+
+.tarif-btns { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.tbtn { padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--surface2); color: var(--text2); transition: all .15s; }
+.tbtn:hover { border-color: var(--accent); color: var(--accent); }
+.tbtn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+.dep-deduction-box { background: linear-gradient(135deg,#f0fdf4 0%,#fafff7 100%); border: 1.5px solid #bbf7d0; border-radius: var(--radius-sm); padding: 14px 16px; margin-top: 8px; display: none; }
+.dep-deduction-box.visible { display: block; }
+.dep-deduction-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 4px 0; }
+.dep-deduction-row .val-green { color: var(--accent); font-weight: 700; }
+.dep-deduction-row .val-gray { color: var(--text3); text-decoration: line-through; font-weight: 400; }
+.pct-pill { display: inline-block; background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; border-radius: 20px; padding: 2px 9px; font-size: 11px; font-weight: 700; }
+.pct-pill-100 { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+
+.aide-sec { font-size: 14.5px; line-height: 1.6; }
+.aide-sec h3 { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--accent); margin-top: 24px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.aide-sec h3:first-child { margin-top: 0; }
+.aide-sec h4 { font-size: 15px; margin: 18px 0 8px; font-weight: 600; }
+.aide-sec p { margin-bottom: 12px; }
+.aide-sec ul { margin-left: 22px; margin-bottom: 16px; }
+.aide-sec li { margin-bottom: 6px; }
+.aide-sec code.inline { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 13px; border: 1px solid var(--border); }
+.aide-sec pre { background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: var(--radius-sm); overflow-x: auto; font-size: 12px; font-family: monospace; margin: 14px 0; }
+
+@media(max-width:700px){ .main { padding: 14px; } .g2,.g4 { grid-template-columns: 1fr; } .header,.tabs { padding-left: 16px; padding-right: 16px; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <div class="brand-icon">🩺</div>
+    <div>
+      <div class="brand-name">Clinique Réseau 360</div>
+      <div class="brand-sub">Gestion des factures</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div id="statusPill" style="display:none;align-items:center;gap:7px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:5px 13px;font-size:12px;color:white;white-space:nowrap;">
+      <span id="statusDot" style="width:8px;height:8px;border-radius:50%;background:#aaa;display:inline-block;transition:background .3s"></span>
+      <span id="statusText">—</span>
+    </div>
+    <div id="lastSyncLabel" style="display:none;font-size:11px;color:rgba(255,255,255,0.55);white-space:nowrap">
+      Dernière sync : <span id="lastSyncTime">—</span>
+    </div>
+    <button class="hbtn hbtn-solid" id="syncBtn" onclick="syncData()" style="display:none">🔄 Synchroniser</button>
+    <button class="hbtn" onclick="openConfig()">⚙️ Config</button>
+  </div>
+</div>
+
+<div id="setupBanner">
+  ⚠️ <strong>Configuration requise :</strong> <a onclick="openConfig()">Configurez votre Google Sheet</a> — ou activez le <a onclick="enableDemo()">mode démo</a>.
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('sessions')" id="tab-sessions">📋 Nouvelle Session</div>
+  <div class="tab" onclick="showTab('facture')" id="tab-facture">🧾 Facture</div>
+  <div class="tab" onclick="showTab('depenses')" id="tab-depenses">💳 Dépenses</div>
+  <div class="tab" onclick="showTab('clients')" id="tab-clients">👥 Clients</div>
+  <div class="tab" onclick="showTab('resume')" id="tab-resume">📊 Résumé</div>
+  <div class="tab" onclick="showTab('strategie')" id="tab-strategie">🎯 Stratégie</div>
+  <div class="tab" onclick="showTab('aide')" id="tab-aide">❓ Aide</div>
+</div>
+
+<div class="main">
+
+<!-- ══ SESSIONS ══ -->
+<div class="page active" id="page-sessions">
+  <div class="g2" style="align-items:start">
+    <div class="card">
+      <div class="card-title">📋 Enregistrer une session</div>
+      <div class="card-sub">Consultez un client et enregistrez automatiquement</div>
+
+      <div class="fg">
+        <label class="fl">Date de la session *</label>
+        <input type="date" class="fc" id="sDate" onchange="loadTodaySessions()">
+      </div>
+
+      <!-- ── CLIENT AUTOCOMPLETE ── -->
+      <div class="fg">
+        <label class="fl">Client * <span id="clientValidIcon" style="color:var(--accent);display:none">✓ Sélectionné</span></label>
+        <div class="client-autocomplete">
+          <div class="client-input-wrap">
+            <span class="search-ico">🔍</span>
+            <input type="text" class="fc" id="clientSearchInput"
+              placeholder="Tapez le nom ou prénom..."
+              oninput="onClientInput()"
+              onkeydown="onClientKeydown(event)"
+              autocomplete="off">
+            <button class="client-clear" id="clientClearBtn" onclick="clearClientSelection()" title="Effacer">×</button>
+          </div>
+          <div class="client-dropdown" id="clientDropdown"></div>
+          <div class="client-selected-badge" id="clientSelectedBadge">
+            <span class="badge-name" id="clientSelectedName">—</span>
+            <span class="badge-detail" id="clientSelectedDetail">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="fg">
+        <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm" style="flex:1" onclick="openAddClient()">+ Nouveau client</button>
+        <button class="btn btn-primary btn-sm" style="flex:2" onclick="saveSession()">💾 Enregistrer</button>
+      </div>
+      </div>
+
+      <div class="fg">
+        <label class="fl">Tarif ($) *</label>
+        <div class="tarif-btns">
+          <button class="tbtn" onclick="setTarif(120)" id="t120">$120</button>
+          <button class="tbtn" onclick="setTarif(140)" id="t140">$140</button>
+          <button class="tbtn active" onclick="setTarif(150)" id="t150">$150</button>
+          <button class="tbtn" onclick="setTarif(0)" id="tOther">Autre</button>
+        </div>
+        <input type="number" class="fc" id="tarifInput" value="150" min="0" step="5" oninput="updatePreview();unselectTarifBtns()">
+      </div>
+
+      <div class="fg">
+        <label class="fl">Notes (optionnel)</label>
+        <input type="text" class="fc" id="sNotes" placeholder="Ex: Suivi, Évaluation initiale...">
+      </div>
+
+      <button class="btn btn-primary btn-full" id="saveSessBtn" onclick="saveSession()">💾 Enregistrer la session</button>
+    </div>
+
+    <div>
+      <div class="card mb20">
+        <div class="card-title">Aperçu du calcul</div>
+        <div class="card-sub" id="pctLabel">Frais clinique : 30% · Votre part : 70%</div>
+        <div class="preview">
+          <div class="preview-row"><span class="lbl">Tarif consultation</span><span id="pTarif" class="c-bold">$150.00</span></div>
+          <div class="preview-row"><span class="lbl">Frais clinique (<span id="pPctLbl">30</span>%)</span><span id="pFrais" class="c-red">-$45.00</span></div>
+          <div class="preview-row"><span class="lbl">✅ Votre revenu net</span><span id="pTotal" class="c-green">$105.00</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="flex aic jsb mb16">
+          <div class="card-title" style="margin:0" id="todayCardTitle">Sessions d'aujourd'hui</div>
+          <span class="badge badge-gold" id="todayCount">0 session(s)</span>
+        </div>
+        <div id="todayList">
+          <div class="empty"><div class="empty-ico">📅</div><div class="txt-sm">Aucune session ce jour</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FACTURE ══ -->
+<div class="page" id="page-facture">
+  <div class="card mb20">
+    <div class="flex jsb aic" style="flex-wrap:wrap;gap:12px">
+      <div>
+        <div class="card-title">🧾 Facture mensuelle</div>
+        <div class="card-sub">Noms confidentiels (Loi 25) — Initiale du nom. Prénom</div>
+      </div>
+      <div class="flex gap8 aic">
+        <select class="fc" id="fMois" style="width:140px" onchange="loadFacture()"></select>
+        <select class="fc" id="fAnnee" style="width:88px" onchange="loadFacture()"></select>
+        <button class="btn btn-primary" onclick="exportFacture()">📥 Exporter Excel</button>
+      </div>
+    </div>
+  </div>
+  <div class="inv-wrap">
+    <div class="inv-top">
+      <div>
+        <div class="inv-title">FACTURE — SERVICES PROFESSIONNELS EN PSYCHOLOGIE</div>
+        <div style="font-size:13px;opacity:.8;margin-top:4px" id="invNum">Facture # —</div>
+      </div>
+      <div style="text-align:right;font-size:13px">
+        <div id="invDate">Date : —</div>
+        <div id="invPeriode">Période : —</div>
+      </div>
+    </div>
+    <div class="inv-body">
+      <div>
+        <div class="txt-xs txt-muted" style="text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Professionnel</div>
+        <div id="invPro" class="fw6"></div>
+        <div style="height:1px;background:var(--border);margin:10px 0"></div>
+        <div class="txt-xs txt-muted" style="text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Client (Clinique)</div>
+        <div id="invClient" style="font-size:13.5px;line-height:1.7"></div>
+      </div>
+      <div style="text-align:right">
+        <div class="txt-xs txt-muted mb16">Résumé du mois</div>
+        <div id="invStats" style="font-size:13px;line-height:2.1"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card"><div id="factureContent"></div></div>
+</div>
+
+<!-- ══ DÉPENSES ══ -->
+<div class="page" id="page-depenses">
+  <div class="g2" style="align-items:start">
+    <div class="card">
+      <div class="card-title">💳 Ajouter une dépense</div>
+      <div class="card-sub">Déductible d'impôt (Formulaire TP-80)</div>
+      <div class="fg"><label class="fl">Date</label><input type="date" class="fc" id="dDate"></div>
+      <div class="fg">
+        <label class="fl">Catégorie</label>
+        <select class="fc" id="dCat" onchange="onCatChange()">
+          <optgroup label="─ Cotisations & Assurances ─">
+            <option value="Cotisations prof. (OPQ)|100">Cotisations prof. (OPQ)</option>
+            <option value="Assurances (Responsabilité)|100">Assurances (Responsabilité)</option>
+          </optgroup>
+          <optgroup label="─ Formation & Matériel ─">
+            <option value="Frais de formation / Congrès|100">Frais de formation / Congrès</option>
+            <option value="Fournitures de bureau / Tests|100">Fournitures de bureau / Tests</option>
+          </optgroup>
+          <optgroup label="─ Logiciels & Outils ─">
+            <option value="Logiciel gestion patients (Jane, Psylio...)|100">🖥️ Logiciel gestion patients</option>
+            <option value="Abonnement logiciel professionnel|100">🖥️ Abonnement logiciel pro</option>
+          </optgroup>
+          <optgroup label="─ Télécommunications ─">
+            <option value="Téléphone cellulaire|mixed">📱 Téléphone cellulaire (usage mixte)</option>
+            <option value="Internet résidentiel|mixed">🌐 Internet résidentiel (usage mixte)</option>
+          </optgroup>
+          <optgroup label="─ Bureau à domicile ─">
+            <option value="Bureau à domicile — Loyer|mixed">🏠 Loyer</option>
+            <option value="Bureau à domicile — Services groupés|mixed">🏠 Services groupés (Loyer+Élec+Hydro)</option>
+            <option value="Bureau à domicile — Électricité|mixed">⚡ Électricité / Hydro-Québec</option>
+          </optgroup>
+          <optgroup label="─ Déplacements & Repas ─">
+            <option value="Frais de représentation (Repas)|50">🍽️ Repas d'affaires (50% max)</option>
+            <option value="Frais de véhicule|mixed">🚗 Frais de véhicule (usage mixte)</option>
+          </optgroup>
+          <optgroup label="─ Autre ─">
+            <option value="Autre dépense admissible|100">Autre dépense admissible</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Montant total payé ($)</label><input type="number" class="fc" id="dAmount" min="0" step="0.01" placeholder="85.50" oninput="updateDepPreview()"></div>
+      <div class="fg" id="pctDeductionGroup" style="display:none">
+        <label class="fl">% usage professionnel</label>
+        <select class="fc" id="dPctDeduction" onchange="updateDepPreview()">
+          <option value="10">10%</option><option value="20">20%</option><option value="25">25%</option>
+          <option value="30">30%</option><option value="33">33%</option><option value="40">40%</option>
+          <option value="50">50%</option><option value="60">60%</option><option value="70">70%</option>
+          <option value="75">75%</option><option value="80">80%</option><option value="90">90%</option>
+          <option value="100">100%</option>
+        </select>
+        <div class="dep-deduction-box" id="depDeductionBox">
+          <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">📊 Aperçu</div>
+          <div class="dep-deduction-row"><span class="lbl">Total payé</span><span class="fw6" id="ddTotal">—</span></div>
+          <div class="dep-deduction-row"><span class="lbl">Non déductible</span><span class="val-gray" id="ddNonDed">—</span></div>
+          <div class="dep-deduction-row" style="border-top:1px solid #bbf7d0;margin-top:4px;padding-top:8px"><span class="lbl fw6">✅ Montant déductible</span><span class="val-green" id="ddDed">—</span></div>
+          <div class="dep-deduction-row"><span class="lbl txt-muted txt-xs">Économie d'impôt (~36%)</span><span style="color:#6b7280;font-size:12px;font-weight:600" id="ddEco">—</span></div>
+        </div>
+      </div>
+      <div id="repasNote" style="display:none"><div class="alert alert-warning">🍽️ Repas d'affaires : limité à <strong>50%</strong> selon Revenu Québec.</div></div>
+      <div class="fg"><label class="fl">Description (optionnel)</label><input type="text" class="fc" id="dNotes" placeholder="Ex: Renouvellement OPQ..."></div>
+      <button class="btn btn-primary btn-full" onclick="saveDepense()">💾 Ajouter la dépense</button>
+    </div>
+    <div class="card">
+      <div class="flex aic jsb mb16">
+        <div class="card-title" style="margin:0">Dépenses de l'année</div>
+        <select class="fc" id="dAnnee" style="width:88px;padding:6px" onchange="renderDepenses()"></select>
+      </div>
+      <div id="depensesList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CLIENTS ══ -->
+<div class="page" id="page-clients">
+  <div class="flex jsb aic mb20" style="flex-wrap:wrap;gap:12px">
+    <div>
+      <h2 class="serif" style="font-size:23px">👥 Liste des clients</h2>
+      <div class="txt-sm txt-muted mt12" id="clientCountLbl">—</div>
+    </div>
+    <div class="flex gap8">
+      <div class="sw"><span class="si">🔍</span><input type="text" class="fc" id="ctSearch" placeholder="Rechercher..." oninput="filterClientTable()" style="width:210px"></div>
+      <button class="btn btn-primary" onclick="openAddClient()">+ Nouveau client</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="tw">
+      <table>
+        <thead><tr><th>Prénom</th><th>Nom</th><th>Téléphone</th><th>Naissance</th><th>Date d'appel</th><th>Statut</th><th>Sessions</th><th></th></tr></thead>
+        <tbody id="clientTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RÉSUMÉ ══ -->
+<div class="page" id="page-resume">
+  <div class="flex jsb aic mb20" style="flex-wrap:wrap;gap:12px">
+    <h2 class="serif" style="font-size:23px">📊 Tableau de bord fiscal</h2>
+    <div class="flex gap8">
+      <select class="fc" id="rMois" style="width:130px" onchange="loadResume()"></select>
+      <select class="fc" id="rAnnee" style="width:84px" onchange="loadResume()"></select>
+    </div>
+  </div>
+  <div class="g4 mb20">
+    <div class="stat"><div class="stat-ico">💰</div><div class="stat-lbl">Revenu Net (Clinique)</div><div class="stat-val" id="stNetAnnee">—</div><div class="stat-sub">Après frais clinique · YTD</div></div>
+    <div class="stat"><div class="stat-ico">💳</div><div class="stat-lbl">Dépenses Pro</div><div class="stat-val c-red" id="stDepenses">—</div><div class="stat-sub">Déductibles TP-80</div></div>
+    <div class="stat"><div class="stat-ico">🏛️</div><div class="stat-lbl">Impôts estimés</div><div class="stat-val c-red" id="stTaxes">—</div><div class="stat-sub">QC + Féd + QPP + RQAP + FSS</div></div>
+    <div class="stat"><div class="stat-ico">💵</div><div class="stat-lbl">Dans vos poches</div><div class="stat-val c-green" id="stReal">—</div><div class="stat-sub">Net après tout</div></div>
+  </div>
+  <div class="alert alert-info">💡 Les impôts sont estimés avec le <strong>taux annuel projeté</strong> (TP-1 2024 : QC + Fédéral + QPP + RQAP + FSS). Basé sur le mois sélectionné × 12 si peu de mois sont enregistrés.</div>
+  <div class="card mb20" id="depEconomieCard" style="display:none">
+    <div class="card-title" style="font-size:16px">💡 Économie fiscale de vos dépenses</div>
+    <div id="depEconomieContent"></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="card-title">Clients fréquents</div><div class="card-sub">Ce mois</div><div id="topClients"></div></div>
+    <div class="card"><div class="card-title">Répartition par tarif</div><div class="card-sub">Sessions par tarif</div><div id="tarifBreak"></div></div>
+  </div>
+</div>
+
+<!-- ══ AIDE ══ -->
+<div class="page" id="page-aide">
+
+  <!-- SECTION: Taux 40% -->
+  <div class="card aide-sec mb20">
+    <h3>🏦 Pourquoi 40% — La règle de provision fiscale</h3>
+    <p>La facture mensuelle affiche toujours <strong>40% à mettre de côté</strong>. Voici pourquoi ce chiffre a été choisi et comment il a été calculé.</p>
+
+    <h4>Base de calcul — Formulaires officiels TP-1 2024</h4>
+    <p>Le taux de 40% est basé sur le calcul officiel de <strong>5 composantes</strong> selon les formulaires Revenu Québec et CRA :</p>
+    <ul>
+      <li><strong>Impôt provincial QC</strong> — Grille 401, TP-1 2024. Tramos : 14% ≤$53,255 · 19% ≤$106,495 · 24% ≤$129,590 · 25.75% au-delà. Crédit personnel de base : $18,056 × 14% = $2,528 (ligne 350).</li>
+      <li><strong>Impôt fédéral</strong> — T1 CRA 2024. Tramos : 15% ≤$57,375 · 20.5% ≤$114,750 · 26% ≤$158,519. Crédit personnel : $15,705 × 15% = $2,356.</li>
+      <li><strong>QPP × 2</strong> — Annexe U, TP-1. Travailleur autonome paie la part employeur ET employé : 12.80% sur revenus entre $3,500 et $68,500 + QPP2 8% jusqu'à $73,200.</li>
+      <li><strong>RQAP</strong> — Annexe R, TP-1. Assurance parentale : 0.878% sur max $94,000.</li>
+      <li><strong>FSS</strong> — Annexe F, TP-1. Fonds services de santé : taux progressif de 1% à 4.26%.</li>
+    </ul>
+
+    <h4>Résultats calculés pour 16–20 patients/semaine (48 semaines)</h4>
+    <div class="tw" style="margin:12px 0">
+      <table>
+        <thead><tr><th>Patients/sem</th><th>Net clinique/an</th><th>Total fiscal</th><th>Taux réel</th><th>Dans la poche</th></tr></thead>
+        <tbody>
+          <tr><td>16</td><td>$80,640</td><td>$31,394</td><td><strong>38.9%</strong></td><td>$49,246</td></tr>
+          <tr><td>18</td><td>$90,720</td><td>$35,893</td><td><strong>39.6%</strong></td><td>$54,827</td></tr>
+          <tr><td>20</td><td>$100,800</td><td>$40,333</td><td><strong>40.0%</strong></td><td>$60,467</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>Pourquoi 40% fixe et non le taux calculé dynamiquement ?</h4>
+    <p>Nous avons testé le calcul dynamique mais il posait un problème important : avec seulement 1 ou 2 mois enregistrés, le revenu annuel projeté est faible et le taux fiscal calculé tombe à <strong>5–10%</strong> — ce qui est dangereux car il suggère de mettre trop peu de côté.</p>
+    <p>Le <strong>40% fixe</strong> est le choix le plus prudent car :</p>
+    <ul>
+      <li>Il couvre le scénario de 20 patients/sem (taux réel exactement 40.0%)</li>
+      <li>Pour 16–18 patients il est légèrement conservateur (38.9–39.6%) — vous mettrez un peu plus de côté, ce qui est préférable à pas assez</li>
+      <li>Il est stable et prévisible — la même règle chaque mois</li>
+      <li>Les dépenses déductibles (TP-80) réduisent le taux réel en dessous de 40%, créant un coussin de sécurité</li>
+    </ul>
+    <div class="alert alert-success">✅ <strong>Règle pratique :</strong> Sur chaque paiement reçu de la clinique ($105/session), mettez <strong>$42</strong> de côté pour les impôts et cotisations. Le reste ($63) est réellement disponible.</div>
+    <div class="alert alert-warning">⚠️ <strong>Note :</strong> Ce taux ne tient pas compte de déductions supplémentaires (REER, frais de garde, etc.) qui pourraient le réduire. Pour une planification fiscale complète, consultez un comptable.</div>
+
+    <h4>Vérifiez vous-même avec la pestaña Stratégie</h4>
+    <p>La pestaña <strong>🎯 Stratégie</strong> utilise le même calcul TP-1 2024 mais de façon dynamique sur un revenu annuel complet. Entrez 48 semaines et votre nombre réel de patients pour voir votre taux fiscal personnalisé.</p>
+  </div>
+
+  <!-- SECTION: Dépenses -->
+  <div class="card aide-sec mb20">
+    <h3>💳 Comment fonctionnent les dépenses déductibles</h3>
+    <p>Les dépenses professionnelles (formulaire <strong>TP-80</strong>) réduisent votre revenu imposable. Chaque dollar dépensé professionnellement vous économise environ <strong>50–55 cents</strong> en impôts (selon votre taux marginal combiné QC + Fédéral).</p>
+    <h4>Dépenses typiques d'un psychologue autonome au Québec</h4>
+    <ul>
+      <li><strong>OPQ</strong> — Cotisation à l'Ordre des psychologues (~$950/an) · 100% déductible</li>
+      <li><strong>Assurance responsabilité</strong> — (~$130/an) · 100% déductible</li>
+      <li><strong>Logiciel gestion patients</strong> — (Jane, Psylio, etc.) · 100% déductible</li>
+      <li><strong>Formation continue</strong> — cours, congrès, supervision · 100% déductible</li>
+      <li><strong>Téléphone cellulaire</strong> — portion professionnelle (~50%) · déductible au prorata</li>
+      <li><strong>Internet résidentiel</strong> — portion professionnelle (~30%) · déductible au prorata</li>
+      <li><strong>Bureau à domicile</strong> — loyer ou hypothèque proportionnel · déductible au prorata</li>
+    </ul>
+    <p>La pestaña <strong>💳 Dépenses</strong> enregistre chaque dépense dans Google Sheets et le <strong>📊 Résumé</strong> calcule automatiquement l'économie fiscale réelle.</p>
+  </div>
+
+  <!-- SECTION: Google Sheets -->
+  <div class="card aide-sec mb20">
+    <h3>☁️ Guide de connexion Google Sheets</h3>
+    <h4>Structure des feuilles requises</h4>
+    <p><strong>Feuille "Clients"</strong> — Colonnes (A à H) :</p>
+    <pre>id | Prénom | Nom | Téléphone | Date_Naissance | Date_Appel | Sexe | Actif</pre>
+    <p><strong>Feuille "Sessions"</strong> — Colonnes (A à I) :</p>
+    <pre>Date_Session | Prénom | Nom | Tarif | Frais | Net | Mois | Facture | Notes</pre>
+    <p><strong>Feuille "Depenses"</strong> — Colonnes (A à G) :</p>
+    <pre>id | date | category | pctDed | amountTotal | amountDed | notes</pre>
+    <h4>Apps Script v4</h4>
+    <p>Collez le code <strong>Code_Apps_Script_v4.js</strong> dans Extensions → Apps Script. Créez un <strong>Nouveau déploiement</strong> → App web → Accès : Tous les utilisateurs. Copiez l'URL dans ⚙️ Config.</p>
+    <h4>Mise à jour du script</h4>
+    <p>Si vous modifiez le script, allez dans <strong>Implémenter → Administrer les déploiements → ✏️ → Nouvelle version → Implémenter</strong>. Puis mettez à jour l'URL dans ⚙️ Config et faites 🔄 Synchroniser.</p>
+  </div>
+
+</div>
+
+
+<!-- ══ STRATÉGIE ══ -->
+<div class="page" id="page-strategie">
+  <div class="flex jsb aic mb20" style="flex-wrap:wrap;gap:12px">
+    <div>
+      <h2 class="serif" style="font-size:23px">🎯 Simulateur stratégique</h2>
+      <div class="txt-sm txt-muted mt12">Simulez différents scénarios pour optimiser vos revenus</div>
+    </div>
+  </div>
+
+  <div class="g2" style="align-items:start">
+    <!-- Formulaire -->
+    <div class="card">
+      <div class="card-title">Paramètres</div>
+      <div class="card-sub">Ajustez les valeurs pour simuler votre situation</div>
+
+      <div class="fg">
+        <label class="fl">Prix par session ($)</label>
+        <div class="tarif-btns" style="margin-bottom:8px">
+          <button class="tbtn" onclick="setStratTarif(120)" id="st120">$120</button>
+          <button class="tbtn" onclick="setStratTarif(140)" id="st140">$140</button>
+          <button class="tbtn active" onclick="setStratTarif(150)" id="st150">$150</button>
+          <button class="tbtn" onclick="setStratTarif(175)" id="st175">$175</button>
+        </div>
+        <input type="number" class="fc" id="sPrix" value="150" min="50" step="5" oninput="unselectStratTarifBtns();simuler()">
+      </div>
+
+      <div class="fg">
+        <label class="fl">% Frais clinique</label>
+        <input type="number" class="fc" id="sPctClinique" value="30" min="0" max="60" step="5" oninput="simuler()">
+      </div>
+
+      <div class="fg">
+        <label class="fl">Patients par semaine</label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <input type="range" id="sPatientsRange" min="5" max="30" value="18" step="1"
+            oninput="document.getElementById('sPatientsNum').value=this.value;simuler()"
+            style="flex:1;accent-color:var(--accent)">
+          <input type="number" id="sPatientsNum" value="18" min="5" max="30"
+            oninput="document.getElementById('sPatientsRange').value=this.value;simuler()"
+            style="width:70px;padding:8px">
+        </div>
+      </div>
+
+      <div class="fg">
+        <label class="fl">Semaines travaillées / an</label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <input type="range" id="sSemainesRange" min="20" max="52" value="48" step="1"
+            oninput="document.getElementById('sSemainesNum').value=this.value;simuler()"
+            style="flex:1;accent-color:var(--accent)">
+          <input type="number" id="sSemainesNum" value="48" min="20" max="52"
+            oninput="document.getElementById('sSemainesRange').value=this.value;simuler()"
+            style="width:70px;padding:8px">
+        </div>
+      </div>
+
+      <div class="fg" style="background:var(--surface2);border:1.5px dashed var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:4px">
+        <label class="fl" style="color:var(--accent)">📊 Ou entrez vos sessions réelles / mois</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="number" class="fc" id="sSessionsMois" placeholder="Ex: 43" min="0" step="1"
+            oninput="onSessionsMoisInput()" style="flex:1">
+          <span class="txt-sm txt-muted" style="white-space:nowrap">sess/mois</span>
+        </div>
+        <div class="txt-xs txt-muted mt12" id="sSessionsMoisInfo" style="display:none"></div>
+      </div>
+
+      <div class="fg">
+        <label class="fl">Dépenses déductibles / an ($) <span class="txt-xs txt-muted">(OPQ, internet, assurance...)</span></label>
+        <input type="number" class="fc" id="sDepenses" value="3000" min="0" step="500" oninput="simuler()">
+      </div>
+
+      <div class="alert alert-info" style="margin-top:4px">
+        💡 Calcul basé sur <strong>TP-1 2024</strong> officiel — 5 composantes : Impôt QC + Fédéral + QPP + RQAP + FSS
+      </div>
+    </div>
+
+    <!-- Résultats -->
+    <div>
+      <!-- KPIs principaux -->
+      <div class="g2 mb20" id="stratKpis">
+        <div class="stat"><div class="stat-ico">💰</div><div class="stat-lbl">Net clinique / an</div><div class="stat-val" id="skNetAn">—</div><div class="stat-sub" id="skNetAnSub">—</div></div>
+        <div class="stat"><div class="stat-ico">🏛️</div><div class="stat-lbl">Impôts + cotisations</div><div class="stat-val c-red" id="skImpots">—</div><div class="stat-sub" id="skImpotsP">—</div></div>
+        <div class="stat"><div class="stat-ico">💵</div><div class="stat-lbl">Dans votre poche / an</div><div class="stat-val c-green" id="skPoche">—</div><div class="stat-sub" id="skPocheMois">—</div></div>
+        <div class="stat"><div class="stat-ico">⏱️</div><div class="stat-lbl">$/heure effectif</div><div class="stat-val" id="skHeure">—</div><div class="stat-sub">après impôts</div></div>
+      </div>
+
+      <!-- Semanal / Mensual -->
+      <div class="card mb20">
+        <div class="card-title" style="font-size:16px;margin-bottom:14px">Semanal &amp; Mensual</div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;font-size:13.5px;border-collapse:collapse">
+            <thead>
+              <tr style="background:var(--surface2)">
+                <th style="padding:9px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);border-bottom:1px solid var(--border)"></th>
+                <th style="padding:9px 12px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);border-bottom:1px solid var(--border)">Ingresas</th>
+                <th style="padding:9px 12px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);border-bottom:1px solid var(--border)">🏦 Guardar</th>
+                <th style="padding:9px 12px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);border-bottom:1px solid var(--border)">💵 Disponible</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:10px 12px;font-weight:600">📅 Semaine</td>
+                <td style="padding:10px 12px;text-align:right" id="skSemIngresas">—</td>
+                <td style="padding:10px 12px;text-align:right;color:var(--danger);font-weight:600" id="skSemGuardar">—</td>
+                <td style="padding:10px 12px;text-align:right;color:var(--accent);font-weight:700" id="skSemDisp">—</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 12px;font-weight:600">📆 Mois</td>
+                <td style="padding:10px 12px;text-align:right" id="skMoisIngresas">—</td>
+                <td style="padding:10px 12px;text-align:right;color:var(--danger);font-weight:600" id="skMoisGuardar">—</td>
+                <td style="padding:10px 12px;text-align:right;color:var(--accent);font-weight:700" id="skMoisDisp">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Décomposition fiscale -->
+      <div class="card mb20">
+        <div class="card-title">Décomposition fiscale</div>
+        <div id="stratFiscal"></div>
+      </div>
+
+      <!-- Lecture stratégique -->
+      <div class="card">
+        <div class="card-title">Lecture stratégique</div>
+        <div id="stratLecture"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- ══ MODAL CONFIG ══ -->
+<div class="mbg" id="cfgModal">
+<div class="modal">
+  <div class="modal-title">⚙️ Configuration</div>
+  <div class="alert alert-info">ℹ️ Paramètres sauvegardés localement dans votre navigateur.</div>
+  <div class="cfg-sec">
+    <div class="cfg-sec-title">👩‍⚕️ Professionnel</div>
+    <div class="fg"><label class="fl">Nom complet</label><input class="fc" id="cNomPro" placeholder="Briseida Quintana-Camacho"></div>
+    <div class="fg"><label class="fl">Titre</label><input class="fc" id="cTitrePro" placeholder="Psychologue, OPQ #15845-26"></div>
+  </div>
+  <div class="cfg-sec">
+    <div class="cfg-sec-title">🏥 Clinique</div>
+    <div class="fg"><label class="fl">Nom</label><input class="fc" id="cNomClinique" placeholder="Clinique Réseau 360"></div>
+    <div class="fg"><label class="fl">Adresse</label><input class="fc" id="cAdresse" placeholder="2480 Ch Ste-Foy #200, Québec City"></div>
+    <div class="fg"><label class="fl">Téléphone</label><input class="fc" id="cTel" placeholder="(418) 952-1723"></div>
+  </div>
+  <div class="cfg-sec">
+    <div class="cfg-sec-title">💲 Facturation</div>
+    <div class="fg"><label class="fl">% frais clinique</label><input class="fc" id="cPct" type="number" value="30" min="0" max="100"></div>
+  </div>
+  <div class="cfg-sec">
+    <div class="cfg-sec-title">🔗 Google Sheets</div>
+    <div class="alert alert-warning">⚠️ Collez l'URL de votre Google Apps Script.</div>
+    <div class="fg"><label class="fl">URL Web App</label><input class="fc" id="cScriptUrl" placeholder="https://script.google.com/macros/s/XXXX/exec"></div>
+    <button class="btn btn-outline btn-full" style="margin-top:4px" onclick="testGoogleScript()">🔌 Tester la connexion</button>
+  </div>
+  <div class="cfg-sec">
+    <div class="cfg-sec-title">💡 Mode démo</div>
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px">
+      <input type="checkbox" id="cDemo" style="width:16px;height:16px"> Utiliser les données de démonstration
+    </label>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" onclick="closeModal('cfgModal')">Annuler</button>
+    <button class="btn btn-primary" onclick="saveConfig()">💾 Sauvegarder</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ MODAL NOUVEAU CLIENT ══ -->
+<div class="mbg" id="addClientModal">
+<div class="modal">
+  <div class="modal-title">+ Nouveau client</div>
+  <div class="g2">
+    <div class="fg"><label class="fl">Prénom *</label><input class="fc" id="ncPrénom"></div>
+    <div class="fg"><label class="fl">Nom *</label><input class="fc" id="ncNom"></div>
+  </div>
+  <div class="g2">
+    <div class="fg"><label class="fl">Téléphone</label><input class="fc" id="ncTel" placeholder="(418) 000-0000"></div>
+    <div class="fg"><label class="fl">Date de naissance</label><input class="fc" id="ncDdn" type="date"></div>
+  </div>
+  <div class="g2">
+    <div class="fg"><label class="fl">Sexe</label><select class="fc" id="ncSexe"><option value="">— Sélectionner —</option><option>Masculin</option><option>Féminin</option><option>Autre</option></select></div>
+    <div class="fg"><label class="fl">Statut</label><select class="fc" id="ncActif"><option value="Oui">Actif</option><option value="Non">Inactif</option></select></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" onclick="closeModal('addClientModal')">Annuler</button>
+    <button class="btn btn-primary" onclick="saveNewClient()">💾 Ajouter</button>
+  </div>
+</div>
+</div>
+
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--accent);color:white;padding:12px 22px;border-radius:30px;font-size:14px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.2);transition:transform .3s,opacity .3s;opacity:0;z-index:999;white-space:nowrap;pointer-events:none"></div>
+
+<script>
+// ════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════
+let cfg = {}, clients = [], sessions = [], depenses = [], isDemo = false;
+let selectedClient = null; // { Prénom, Nom, Téléphone, ... }
+let highlightedIndex = -1;
+
+const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const today = (() => {
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+})();
+
+const DEMO_CLIENTS = [
+  {id:'1',Prénom:'Mathieu',Nom:'Guitor',Téléphone:'514-686-0198',Date_Naissance:'1994-09-08',Date_Appel:'2026-03-13',Sexe:'Masculin',Actif:'Oui'},
+  {id:'2',Prénom:'Pascale',Nom:'Roussin',Téléphone:'418-573-7580',Date_Naissance:'1969-12-26',Date_Appel:'2026-03-13',Sexe:'Féminin',Actif:'Oui'},
+  {id:'3',Prénom:'Bobby',Nom:'Nadeau',Téléphone:'(418) 234-6050',Date_Naissance:'1990-03-23',Date_Appel:'2026-03-09',Sexe:'Masculin',Actif:'Oui'},
+  {id:'4',Prénom:'Christine',Nom:'Hamel',Téléphone:'514-794-7888',Date_Naissance:'1957-06-20',Date_Appel:'2026-03-04',Sexe:'Féminin',Actif:'Oui'},
+  {id:'5',Prénom:'David',Nom:'Boivin',Téléphone:'418-803-4861',Date_Naissance:'1989-08-30',Date_Appel:'2026-01-17',Sexe:'Masculin',Actif:'Oui'},
+];
+const DEMO_SESSIONS = [
+  {Date_Session:today,Prénom:'Mathieu',Nom:'Guitor',Tarif:150,Frais:45,Net:105,Mois:`${MOIS[new Date().getMonth()]} ${new Date().getFullYear()}`,Facture:`${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getFullYear()).slice(-2)}`,Notes:''},
+  {Date_Session:today,Prénom:'Pascale',Nom:'Roussin',Tarif:150,Frais:45,Net:105,Mois:`${MOIS[new Date().getMonth()]} ${new Date().getFullYear()}`,Facture:`${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getFullYear()).slice(-2)}`,Notes:'Suivi'},
+];
+const DEMO_DEPENSES = [
+  {id:'d1',date:'2026-04-01',category:'Cotisations prof. (OPQ)',pctDed:100,amountTotal:650,amountDed:650,notes:'Renouvellement annuel'},
+];
+
+// ════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════
+window.onload = () => {
+  loadCfg();
+  fillSelectors();
+  document.getElementById('sDate').value = today;
+  document.getElementById('dDate').value = today;
+  updatePreview();
+  setTarif(150);
+  // Close dropdown on outside click
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.client-autocomplete')) closeClientDropdown();
+  });
+  if (cfg.demo) { enableDemo(true); return; }
+  if (cfg.scriptUrl) {
+    document.getElementById('setupBanner').style.display='none';
+    document.getElementById('syncBtn').style.display='';
+    setStatus('syncing','Connexion…','');
+    syncData();
+    return;
+  }
+  setStatus('warn','Non configuré','');
+};
+
+function fillSelectors() {
+  const now = new Date();
+  ['fMois','rMois'].forEach(id => {
+    document.getElementById(id).innerHTML = MOIS.map((m,i)=>`<option value="${i+1}"${i===now.getMonth()?' selected':''}>${m}</option>`).join('');
+  });
+  ['fAnnee','rAnnee','dAnnee'].forEach(id => {
+    document.getElementById(id).innerHTML = [2024,2025,2026,2027].map(y=>`<option value="${y}"${y===now.getFullYear()?' selected':''}>${y}</option>`).join('');
+  });
+}
+
+// ════════════════════════════════════════════════════════
+//  CLIENT AUTOCOMPLETE
+// ════════════════════════════════════════════════════════
+function onClientInput() {
+  const q = document.getElementById('clientSearchInput').value.trim().toLowerCase();
+  selectedClient = null;
+  document.getElementById('clientSelectedBadge').classList.remove('visible');
+  document.getElementById('clientValidIcon').style.display = 'none';
+  document.getElementById('clientClearBtn').classList.toggle('visible', q.length > 0);
+  highlightedIndex = -1;
+
+  if (q.length === 0) { closeClientDropdown(); return; }
+
+  const active = clients.filter(c => c.Actif !== 'Non');
+  const matches = active.filter(c =>
+    (c.Prénom||'').toLowerCase().includes(q) ||
+    (c.Nom||'').toLowerCase().includes(q) ||
+    (`${c.Prénom} ${c.Nom}`).toLowerCase().includes(q) ||
+    (`${c.Nom} ${c.Prénom}`).toLowerCase().includes(q)
+  ).sort((a,b) => `${a.Nom}${a.Prénom}`.localeCompare(`${b.Nom}${b.Prénom}`)).slice(0,10);
+
+  renderClientDropdown(matches, q);
+}
+
+function renderClientDropdown(matches, q) {
+  const dd = document.getElementById('clientDropdown');
+  if (!matches.length) {
+    dd.innerHTML = `<div class="no-results">Aucun client trouvé pour "<strong>${q}</strong>"</div>`;
+    dd.classList.add('open');
+    return;
+  }
+  dd.innerHTML = matches.map((c, i) => {
+    const fullName = `${c.Prénom} ${c.Nom}`;
+    // Highlight matching part
+    const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+    const hlName = fullName.replace(re, '<span class="opt-match">$1</span>');
+    const detail = c.Téléphone ? `📞 ${c.Téléphone}` : '';
+    return `<div class="client-option" data-idx="${i}" onclick="selectClientByIndex(${i})" onmouseover="highlightedIndex=${i};updateHighlight()">
+      <span class="opt-name">${hlName}</span>
+      ${detail ? `<span class="opt-detail">${detail}</span>` : ''}
+    </div>`;
+  }).join('');
+  dd.classList.add('open');
+  // Store matches for keyboard navigation
+  dd._matches = matches;
+}
+
+function selectClientByIndex(i) {
+  const dd = document.getElementById('clientDropdown');
+  const matches = dd._matches;
+  if (!matches || !matches[i]) return;
+  selectClient(matches[i]);
+}
+
+function selectClient(c) {
+  selectedClient = c;
+  document.getElementById('clientSearchInput').value = `${c.Prénom} ${c.Nom}`;
+  document.getElementById('clientClearBtn').classList.add('visible');
+  document.getElementById('clientValidIcon').style.display = '';
+  document.getElementById('clientSelectedName').textContent = `${c.Prénom} ${c.Nom}`;
+  document.getElementById('clientSelectedDetail').textContent = c.Téléphone ? `📞 ${c.Téléphone}` : '';
+  document.getElementById('clientSelectedBadge').classList.add('visible');
+  closeClientDropdown();
+}
+
+function clearClientSelection() {
+  selectedClient = null;
+  document.getElementById('clientSearchInput').value = '';
+  document.getElementById('clientClearBtn').classList.remove('visible');
+  document.getElementById('clientSelectedBadge').classList.remove('visible');
+  document.getElementById('clientValidIcon').style.display = 'none';
+  closeClientDropdown();
+  document.getElementById('clientSearchInput').focus();
+}
+
+function closeClientDropdown() {
+  document.getElementById('clientDropdown').classList.remove('open');
+}
+
+function onClientKeydown(e) {
+  const dd = document.getElementById('clientDropdown');
+  const matches = dd._matches || [];
+  if (!dd.classList.contains('open')) return;
+  if (e.key === 'ArrowDown') { e.preventDefault(); highlightedIndex = Math.min(highlightedIndex+1, matches.length-1); updateHighlight(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); highlightedIndex = Math.max(highlightedIndex-1, 0); updateHighlight(); }
+  else if (e.key === 'Enter' && highlightedIndex >= 0) { e.preventDefault(); selectClientByIndex(highlightedIndex); }
+  else if (e.key === 'Escape') closeClientDropdown();
+}
+
+function updateHighlight() {
+  document.querySelectorAll('.client-option').forEach((el, i) => {
+    el.classList.toggle('highlighted', i === highlightedIndex);
+    if (i === highlightedIndex) el.scrollIntoView({block:'nearest'});
+  });
+}
+
+// ════════════════════════════════════════════════════════
+//  CONFIG
+// ════════════════════════════════════════════════════════
+function loadCfg() {
+  try { cfg = JSON.parse(localStorage.getItem('clinique360_cfg')||'{}'); } catch(e){ cfg={}; }
+  if(!cfg.pct) cfg.pct=30;
+  if(!cfg.nomPro) cfg.nomPro='Briseida Quintana-Camacho';
+  if(!cfg.titrePro) cfg.titrePro='Candidate au permis de psychologue par voie d\'équivalences';
+  if(!cfg.nomClinique) cfg.nomClinique='Clinique Réseau 360';
+  if(!cfg.adresse) cfg.adresse='2480 Ch Ste-Foy #200, Québec City, QC G1V 1T6';
+  if(!cfg.tel) cfg.tel='(418) 952-1723';
+}
+function openConfig() {
+  loadCfg();
+  document.getElementById('cNomPro').value=cfg.nomPro||'';
+  document.getElementById('cTitrePro').value=cfg.titrePro||'';
+  document.getElementById('cNomClinique').value=cfg.nomClinique||'';
+  document.getElementById('cAdresse').value=cfg.adresse||'';
+  document.getElementById('cTel').value=cfg.tel||'';
+  document.getElementById('cPct').value=cfg.pct||30;
+  document.getElementById('cScriptUrl').value=cfg.scriptUrl||'';
+  document.getElementById('cDemo').checked=!!cfg.demo;
+  document.getElementById('cfgModal').classList.add('open');
+}
+function saveConfig() {
+  cfg.nomPro=v('cNomPro'); cfg.titrePro=v('cTitrePro'); cfg.nomClinique=v('cNomClinique');
+  cfg.adresse=v('cAdresse'); cfg.tel=v('cTel'); cfg.pct=parseFloat(v('cPct'))||30;
+  cfg.scriptUrl=v('cScriptUrl'); cfg.demo=document.getElementById('cDemo').checked;
+  localStorage.setItem('clinique360_cfg',JSON.stringify(cfg));
+  closeModal('cfgModal'); updatePctUI(); updatePreview();
+  toast('✅ Configuration sauvegardée');
+  if(cfg.demo){enableDemo(true);return;}
+  if(cfg.scriptUrl){isDemo=false;document.getElementById('setupBanner').style.display='none';document.getElementById('syncBtn').style.display='';syncData();}
+}
+function enableDemo(silent=false) {
+  isDemo=true; cfg.demo=true;
+  clients=JSON.parse(JSON.stringify(DEMO_CLIENTS));
+  sessions=JSON.parse(JSON.stringify(DEMO_SESSIONS));
+  depenses=JSON.parse(JSON.stringify(DEMO_DEPENSES));
+  document.getElementById('setupBanner').style.display='none';
+  renderClientTable(); loadTodaySessions(); renderDepenses();
+  setStatus('demo','Mode démo',clients.length+' clients');
+  if(!silent) toast('🟡 Mode démo activé');
+}
+function updatePctUI() {
+  const p=cfg.pct||30;
+  document.getElementById('pctLabel').textContent=`Frais clinique : ${p}% · Votre part : ${100-p}%`;
+  const el=document.getElementById('pPctLbl'); if(el) el.textContent=p;
+}
+
+// ════════════════════════════════════════════════════════
+//  GOOGLE SHEETS API
+// ════════════════════════════════════════════════════════
+async function callScript(action,data={}) {
+  if(!cfg.scriptUrl) throw new Error('URL du script non configurée');
+  const url=cfg.scriptUrl+'?action='+action+'&data='+encodeURIComponent(JSON.stringify(data));
+  const resp=await fetch(url,{redirect:'follow'});
+  if(!resp.ok) throw new Error('Erreur réseau: '+resp.status);
+  const text=await resp.text();
+  try { const json=JSON.parse(text); if(json.error) throw new Error(json.error); return json; }
+  catch(e) { throw new Error('Réponse invalide du script.'); }
+}
+async function syncData() {
+  if(isDemo){setStatus('demo','Mode démo',clients.length+' clients');return;}
+  if(!cfg.scriptUrl){setStatus('error','Non configuré','');return;}
+  const btn=document.getElementById('syncBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> Sync…';
+  setStatus('syncing','Connexion…','');
+  try {
+    const c=await callScript('getClients');
+    clients=(c.data||[]).map((r,i)=>({...r,id:r.id||'_r'+i}));
+    const s=await callScript('getSessions');
+    sessions=s.data||[];
+    const d=await callScript('getDepenses');
+    depenses=(d.data||[]).map(e=>({
+      ...e,
+      // Normaliser TOUTES les clés + convertir date au format YYYY-MM-DD
+      id:          e.id || e.Id || '',
+      date:        normalizeDate(e.date || e.Date || ''),
+      category:    e.category || e.Categorie || e.Category || '',
+      pctDed:      Number(e.pctDed || e.PctDed) || 100,
+      amountTotal: Number(e.amountTotal || e.MontantTotal) || 0,
+      amountDed:   Number(e.amountDed || e.MontantDed) || 0,
+      notes:       e.notes || e.Notes || ''
+    }));
+    renderClientTable(); loadTodaySessions(); updateClientCount(); renderDepenses();
+    const now=new Date();
+    const t=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+    document.getElementById('lastSyncTime').textContent=t;
+    document.getElementById('lastSyncLabel').style.display='';
+    setStatus('ok','Connecté',clients.length+' clients · '+sessions.length+' sessions');
+    toast('✅ Synchronisé — '+clients.length+' clients');
+  } catch(e) {
+    setStatus('error','Erreur',e.message.slice(0,40));
+    toast('❌ '+e.message,'error');
+  } finally { btn.disabled=false; btn.innerHTML='🔄 Synchroniser'; }
+}
+function setStatus(state,label,sub) {
+  const pill=document.getElementById('statusPill'),dot=document.getElementById('statusDot'),txt=document.getElementById('statusText');
+  pill.style.display='flex';
+  const s={ok:{c:'#52b788',t:'✓ '+label+(sub?'  ·  '+sub:'')},error:{c:'#e74c3c',t:'✗ '+label+(sub?'  —  '+sub:'')},syncing:{c:'#f39c12',t:'↻ '+label},demo:{c:'#f39c12',t:'● Démo  ·  '+label},warn:{c:'#f39c12',t:'⚠ '+label}}[state]||{c:'#999',t:label};
+  dot.style.background=s.c; txt.textContent=s.t;
+}
+async function testGoogleScript() {
+  const url=document.getElementById('cScriptUrl').value.trim();
+  if(!url){toast('⚠️ Entrez l\'URL d\'abord','warning');return;}
+  try { const resp=await fetch(url+'?action=ping',{redirect:'follow'}); const j=JSON.parse(await resp.text()); if(j.status==='ok') toast('✅ Connexion réussie!'); else throw new Error(JSON.stringify(j)); }
+  catch(e){toast('❌ '+e.message,'error');}
+}
+
+// ════════════════════════════════════════════════════════
+//  SESSIONS — avec Prénom et Nom séparés
+// ════════════════════════════════════════════════════════
+function setTarif(val) {
+  ['t120','t140','t150','tOther'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
+  const map={120:'t120',140:'t140',150:'t150'};
+  if(map[val]) document.getElementById(map[val]).classList.add('active');
+  else document.getElementById('tOther').classList.add('active');
+  document.getElementById('tarifInput').value=val>0?val:'';
+  updatePreview();
+}
+function unselectTarifBtns(){['t120','t140','t150','tOther'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});}
+function updatePreview() {
+  const t=parseFloat(document.getElementById('tarifInput').value)||0,p=cfg.pct||30;
+  if(t<=0){['pTarif','pFrais','pTotal'].forEach(id=>document.getElementById(id).textContent='—');return;}
+  const frais=round2(t*p/100),net=round2(t-frais);
+  document.getElementById('pTarif').textContent=`$${t.toFixed(2)}`;
+  document.getElementById('pFrais').textContent=`-$${frais.toFixed(2)}`;
+  document.getElementById('pTotal').textContent=`$${net.toFixed(2)}`;
+}
+
+async function saveSession() {
+  const date=document.getElementById('sDate').value;
+  const tarif=parseFloat(document.getElementById('tarifInput').value);
+  const notes=document.getElementById('sNotes').value.trim();
+
+  if(!date||!selectedClient||!tarif){
+    toast('⚠️ Sélectionnez un client et un tarif','warning');
+    if(!selectedClient) document.getElementById('clientSearchInput').focus();
+    return;
+  }
+
+  const p=cfg.pct||30, frais=round2(tarif*p/100), net=round2(tarif-frais);
+  const parts=date.split('-'), dMonth=parseInt(parts[1])-1;
+  const mois=`${MOIS[dMonth]} ${parts[0]}`;
+  const facture=`${String(dMonth+1).padStart(2,'0')}-${parts[0].slice(-2)}`;
+
+  // ── Structure propre : Prénom et Nom séparés ──
+  const sess={
+    Date_Session: date,
+    Prénom: selectedClient.Prénom,
+    Nom: selectedClient.Nom,
+    Tarif: tarif,
+    Frais: frais,
+    Net: net,
+    Mois: mois,
+    Facture: facture,
+    Notes: notes
+  };
+
+  const btn=document.getElementById('saveSessBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> Enregistrement…';
+  try {
+    if(isDemo||!cfg.scriptUrl){
+      sessions.push(sess);
+      toast('✅ Session enregistrée (démo)');
+    } else {
+      await callScript('addSession',sess);
+      sessions.push(sess);
+      toast(`✅ Session enregistrée — ${selectedClient.Prénom} ${selectedClient.Nom}`);
+    }
+    document.getElementById('sNotes').value='';
+    clearClientSelection();
+    loadTodaySessions();
+  } catch(e){ toast('❌ '+e.message,'error'); }
+  finally { btn.disabled=false; btn.innerHTML='💾 Enregistrer la session'; }
+}
+
+function loadTodaySessions() {
+  const selDate=document.getElementById('sDate').value||today;
+  const todaySess=sessions.filter(s=>normalizeDate(s.Date_Session)===selDate);
+  const titleEl=document.getElementById('todayCardTitle');
+  if(titleEl) titleEl.textContent=selDate===today?"Sessions d'aujourd'hui":"Sessions du "+fmtDate(selDate);
+  document.getElementById('todayCount').textContent=`${todaySess.length} session(s)`;
+  const el=document.getElementById('todayList');
+  if(!todaySess.length){el.innerHTML='<div class="empty"><div class="empty-ico">📅</div><div class="txt-sm">Aucune session ce jour</div></div>';return;}
+  const totT=todaySess.reduce((a,s)=>a+Number(s.Tarif),0);
+  const totF=todaySess.reduce((a,s)=>a+Number(s.Frais),0);
+  const totN=todaySess.reduce((a,s)=>a+Number(s.Net),0);
+  el.innerHTML=`<div class="tw"><table>
+    <thead><tr><th>Client</th><th>Tarif</th><th>Net</th><th></th></tr></thead>
+    <tbody>${todaySess.map((s,i)=>`<tr>
+      <td><strong>${s.Prénom} ${s.Nom}</strong></td>
+      <td>$${Number(s.Tarif).toFixed(2)}</td>
+      <td class="c-green fw6">$${Number(s.Net).toFixed(2)}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm" style="background:#e8f4fd;color:#2c5282;border:1px solid #bee3f8;padding:4px 8px;font-size:11px" onclick="editSession(${i})">✏️</button>
+        <button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;padding:4px 8px;font-size:11px;margin-left:4px" onclick="deleteSession(${i})">✕</button>
+      </td>
+    </tr>`).join('')}</tbody>
+    <tfoot><tr><td class="tfoot">TOTAL</td><td class="tfoot">$${totT.toFixed(2)}</td><td class="tfoot c-green">$${totN.toFixed(2)}</td><td class="tfoot"></td></tr></tfoot>
+  </table></div>`;
+}
+
+// ════════════════════════════════════════════════════════
+//  FACTURE — getConfidentialName usa Prénom/Nom directamente
+// ════════════════════════════════════════════════════════
+function getConfidentialName(s) {
+  // s tiene Prénom y Nom como columnas separadas (nueva estructura)
+  const prenom = (s.Prénom||'').trim();
+  const nom    = (s.Nom||'').trim();
+  if (prenom && nom) return nom.charAt(0).toUpperCase() + '. ' + prenom;
+  // Fallback para datos viejos que tenían columna Client="Prénom Nom"
+  const full = (s.Client||'').trim();
+  if (!full) return '—';
+  const parts = full.split(' ');
+  if (parts.length >= 2) {
+    const n = parts[parts.length-1];
+    const p = parts.slice(0,-1).join(' ');
+    return n.charAt(0).toUpperCase()+'. '+p;
+  }
+  return full;
+}
+
+function loadFacture() {
+  const m=parseInt(document.getElementById('fMois').value);
+  const y=parseInt(document.getElementById('fAnnee').value);
+  const moisStr=`${MOIS[m-1]} ${y}`;
+  const sess=sessions.filter(s=>s.Mois===moisStr);
+
+  // Taux fiscal fixe 40% — basé sur calcul officiel TP-1 2024
+  // (ImpQC + ImpFed + QPP×2 + RQAP + FSS) pour 16-20 patients/semaine
+  // Taux réel calculé: ~39-40%. On utilise 40% comme provision prudente.
+  const tauxEff = 0.40;
+
+  const numF=`${String(m).padStart(2,'0')}-${String(y).slice(-2)}`;
+  document.getElementById('invNum').textContent=`Facture # ${numF}`;
+  const now=new Date();
+  document.getElementById('invDate').textContent=`Date : ${String(now.getDate()).padStart(2,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()}`;
+  document.getElementById('invPeriode').textContent=`Période : ${MOIS[m-1]}`;
+  document.getElementById('invPro').innerHTML=`${cfg.nomPro||'—'}<br><span style="font-weight:400;font-size:13px;color:var(--text3)">${cfg.titrePro||''}</span>`;
+  document.getElementById('invClient').innerHTML=`<strong>${cfg.nomClinique||'—'}</strong><br>${cfg.adresse||''}<br>${cfg.tel||''}`;
+
+  const totT=sess.reduce((a,s)=>a+Number(s.Tarif),0);
+  const totF=sess.reduce((a,s)=>a+Number(s.Frais),0);
+  const totN=sess.reduce((a,s)=>a+Number(s.Net),0);
+  const aMettreDecote = round2(totN * tauxEff);
+  const netPoche      = round2(totN - aMettreDecote);
+  const pctAffiche    = (tauxEff*100).toFixed(1);
+  document.getElementById('invStats').innerHTML=`
+    <div>${sess.length} session(s)</div>
+    <div>Total brut : <strong>$${totT.toFixed(2)}</strong></div>
+    <div style="color:var(--accent);font-weight:700;margin-top:4px">Net à recevoir : $${totN.toFixed(2)}</div>
+    <div style="border-top:1px solid rgba(255,255,255,0.2);margin-top:8px;padding-top:8px">
+      <div style="color:var(--warning);font-size:12px">🏦 À mettre de côté (~40%, TP-1 2024) : <strong>$${aMettreDecote.toFixed(2)}</strong></div>
+      <div style="color:#86efac;font-size:12px;margin-top:3px">💵 Dans votre poche : <strong>$${netPoche.toFixed(2)}</strong></div>
+    </div>`;
+
+  if(!sess.length){document.getElementById('factureContent').innerHTML=`<div class="empty"><div class="empty-ico">📂</div><div class="empty-title">Aucune session pour ${moisStr}</div></div>`;return;}
+
+  const pctDisp='40.0';
+  document.getElementById('factureContent').innerHTML=`<div class="tw"><table>
+    <thead><tr><th>Date</th><th>Client (Loi 25)</th><th>Tarif</th><th>Frais (${cfg.pct||30}%)</th><th>Net</th><th>🏦 À garder (≈${pctDisp}%)</th></tr></thead>
+    <tbody>${sess.map(s=>`<tr>
+      <td>${fmtDate(s.Date_Session)}</td>
+      <td><strong>${getConfidentialName(s)}</strong></td>
+      <td>$${Number(s.Tarif).toFixed(2)}</td>
+      <td class="c-red">-$${Number(s.Frais).toFixed(2)}</td>
+      <td class="c-green fw6">$${Number(s.Net).toFixed(2)}</td>
+      <td style="color:var(--warning);background:#fffbeb">-$${(Number(s.Net)*tauxEff).toFixed(2)}</td>
+    </tr>`).join('')}</tbody>
+    <tfoot><tr>
+      <td class="tfoot" colspan="2">TOTAL — ${sess.length} sessions</td>
+      <td class="tfoot">$${totT.toFixed(2)}</td>
+      <td class="tfoot c-red">-$${totF.toFixed(2)}</td>
+      <td class="tfoot c-green">$${totN.toFixed(2)}</td>
+      <td class="tfoot" style="color:var(--warning)">-$${(totN*tauxEff).toFixed(2)}</td>
+    </tr></tfoot>
+  </table></div>`;
+}
+
+function exportFacture() {
+  const m=parseInt(document.getElementById('fMois').value);
+  const y=parseInt(document.getElementById('fAnnee').value);
+  const moisStr=`${MOIS[m-1]} ${y}`;
+  const numF=`${String(m).padStart(2,'0')}-${String(y).slice(-2)}`;
+  const sess=sessions.filter(s=>s.Mois===moisStr);
+  if(!sess.length){toast('⚠️ Aucune session','warning');return;}
+  const now=new Date();
+  const dateStr=`${String(now.getDate()).padStart(2,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()}`;
+  const totT=sess.reduce((a,s)=>a+Number(s.Tarif),0);
+  const totF=sess.reduce((a,s)=>a+Number(s.Frais),0);
+  const totN=sess.reduce((a,s)=>a+Number(s.Net),0);
+  const pct=cfg.pct||30;
+  const sessionRows=sess.map((s,i)=>{
+    const bg=i%2===0?'#ffffff':'#fafafa';
+    return `<tr style="background:${bg}">
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11pt;color:#333">${fmtDate(s.Date_Session)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11pt;color:#333">${getConfidentialName(s)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11pt;text-align:right;color:#333">$${Number(s.Tarif).toFixed(2)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11pt;text-align:right;color:#c0392b">$${Number(s.Frais).toFixed(2)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11pt;text-align:right;font-weight:bold;color:#1a1a1a">$${Number(s.Net).toFixed(2)}</td>
+    </tr>`;
+  }).join('');
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8"><style>body{font-family:Calibri,Arial,sans-serif}table{border-collapse:collapse;width:100%}td{vertical-align:top}</style></head>
+<body><table style="width:720px;margin:0 auto;font-family:Calibri,Arial,sans-serif">
+<tr><td colspan="5" style="height:20px"></td></tr>
+<tr>
+  <td colspan="3" style="padding:0 12px"><div style="font-size:32pt;font-weight:bold;color:#111;line-height:1">FACTURE</div><div style="font-size:10pt;color:#888;margin-top:2px;text-transform:uppercase;letter-spacing:1px">Services professionnels en psychologie</div></td>
+  <td colspan="2" style="padding:0 12px;text-align:right;vertical-align:bottom"><div style="font-size:18pt;font-weight:bold;color:#111">N° ${numF}</div><div style="font-size:10pt;color:#888">Date : ${dateStr}</div></td>
+</tr>
+<tr><td colspan="5" style="padding:10px 12px 0"><div style="border-top:2px solid #111;width:100%"></div></td></tr>
+<tr><td colspan="5" style="height:16px"></td></tr>
+<tr>
+  <td colspan="3" style="padding:0 12px"><div style="font-size:7.5pt;font-weight:bold;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Professionnel</div><div style="font-size:12pt;font-weight:bold;color:#111">${cfg.nomPro||''}</div><div style="font-size:9pt;color:#666;margin-top:2px">${cfg.titrePro||''}</div></td>
+  <td colspan="2" style="padding:0 12px;text-align:right"><div style="font-size:7.5pt;font-weight:bold;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Période</div><div style="font-size:12pt;font-weight:bold;color:#111">${MOIS[m-1]} ${y}</div></td>
+</tr>
+<tr><td colspan="5" style="height:16px"></td></tr>
+<tr><td colspan="5" style="padding:0 12px"><div style="font-size:7.5pt;font-weight:bold;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Destinataire</div><div style="font-size:12pt;font-weight:bold;color:#111">${cfg.nomClinique||''}</div><div style="font-size:9.5pt;color:#555;margin-top:2px">${cfg.adresse||''}</div><div style="font-size:9.5pt;color:#555">${cfg.tel||''}</div></td></tr>
+<tr><td colspan="5" style="height:24px"></td></tr>
+<tr style="background:#f2f2f2">
+  <td style="padding:9px 12px;font-size:8.5pt;font-weight:bold;color:#444;border-top:1.5px solid #111;border-bottom:1.5px solid #111">DATE</td>
+  <td style="padding:9px 12px;font-size:8.5pt;font-weight:bold;color:#444;border-top:1.5px solid #111;border-bottom:1.5px solid #111">CLIENT</td>
+  <td style="padding:9px 12px;font-size:8.5pt;font-weight:bold;color:#444;text-align:right;border-top:1.5px solid #111;border-bottom:1.5px solid #111">TARIF</td>
+  <td style="padding:9px 12px;font-size:8.5pt;font-weight:bold;color:#444;text-align:right;border-top:1.5px solid #111;border-bottom:1.5px solid #111">FRAIS (${pct}%)</td>
+  <td style="padding:9px 12px;font-size:8.5pt;font-weight:bold;color:#444;text-align:right;border-top:1.5px solid #111;border-bottom:1.5px solid #111">NET</td>
+</tr>
+${sessionRows}
+<tr>
+  <td colspan="2" style="padding:10px 12px;font-size:11pt;font-weight:bold;color:#111;border-top:2px solid #111;border-bottom:1px solid #111">TOTAL — ${sess.length} consultation(s)</td>
+  <td style="padding:10px 12px;font-size:11pt;font-weight:bold;text-align:right;color:#111;border-top:2px solid #111;border-bottom:1px solid #111">$${totT.toFixed(2)}</td>
+  <td style="padding:10px 12px;font-size:11pt;font-weight:bold;text-align:right;color:#c0392b;border-top:2px solid #111;border-bottom:1px solid #111">$${totF.toFixed(2)}</td>
+  <td style="padding:10px 12px;font-size:12pt;font-weight:bold;text-align:right;color:#111;border-top:2px solid #111;border-bottom:1px solid #111">$${totN.toFixed(2)}</td>
+</tr>
+<tr><td colspan="5" style="height:48px"></td></tr>
+<tr>
+  <td colspan="2" style="padding:0 12px"></td>
+  <td colspan="3" style="padding:0 12px;text-align:center"><div style="border-top:1px solid #999;padding-top:6px"><div style="font-size:8.5pt;color:#999">Signature du professionnel</div><div style="font-size:9pt;color:#555;margin-top:4px">${cfg.nomPro||''}</div></div></td>
+</tr>
+<tr><td colspan="5" style="height:30px"></td></tr>
+</table></body></html>`;
+  const blob=new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`Facture_${numF}_${(cfg.nomClinique||'Clinique').replace(/ /g,'_')}.xls`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('✅ Facture exportée!');
+}
+
+// ════════════════════════════════════════════════════════
+//  CLIENTS
+// ════════════════════════════════════════════════════════
+function renderClientTable() {
+  const actifs=clients.filter(c=>c.Actif!=='Non');
+  const tbody=document.getElementById('clientTbody');
+  if(!actifs.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:36px;color:var(--text3)">Aucun client</td></tr>';return;}
+  tbody.innerHTML=actifs.map(c=>{
+    const cnt=sessions.filter(s=>(s.Prénom===c.Prénom&&s.Nom===c.Nom)||(s.Client===`${c.Prénom} ${c.Nom}`)).length;
+    return `<tr>
+      <td><strong>${c.Prénom}</strong></td><td>${c.Nom}</td>
+      <td>${c.Téléphone||'—'}</td><td>${fmtDate(c.Date_Naissance)||'—'}</td><td>${fmtDate(c.Date_Appel)||'—'}</td>
+      <td><span class="badge ${c.Actif==='Oui'?'badge-green':'badge-gray'}">${c.Actif==='Oui'?'Actif':'Inactif'}</span></td>
+      <td><span class="badge badge-gold">${cnt}</span></td>
+      <td><button class="btn btn-danger" onclick="confirmDeleteClient('${c.id}','${c.Prénom} ${c.Nom}')">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+function filterClientTable() {
+  const q=document.getElementById('ctSearch').value.toLowerCase();
+  document.querySelectorAll('#clientTbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});
+}
+function updateClientCount() {
+  const a=clients.filter(c=>c.Actif!=='Non').length;
+  document.getElementById('clientCountLbl').textContent=`${a} clients actifs · ${clients.length} au total`;
+}
+function openAddClient() {
+  ['ncPrénom','ncNom','ncTel','ncDdn'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ncSexe').value=''; document.getElementById('ncActif').value='Oui';
+  document.getElementById('addClientModal').classList.add('open');
+}
+async function saveNewClient() {
+  const prenom=v('ncPrénom'),nom=v('ncNom');
+  if(!prenom||!nom){toast('⚠️ Prénom et Nom obligatoires','warning');return;}
+  if(clients.find(c=>c.Prénom.toLowerCase()===prenom.toLowerCase()&&c.Nom.toLowerCase()===nom.toLowerCase())){toast('⚠️ Ce client existe déjà','warning');return;}
+  const client={Prénom:prenom,Nom:nom,Téléphone:v('ncTel'),Date_Naissance:v('ncDdn'),Date_Appel:today,Sexe:document.getElementById('ncSexe').value,Actif:document.getElementById('ncActif').value};
+  try {
+    if(isDemo||!cfg.scriptUrl){client.id=String(Date.now());clients.push(client);toast('✅ Client ajouté (démo)');}
+    else{const res=await callScript('addClient',client);client.id=res.id;clients.push(client);toast('✅ Client ajouté dans Google Sheets');}
+    closeModal('addClientModal'); renderClientTable(); updateClientCount();
+  } catch(e){toast('❌ '+e.message,'error');}
+}
+async function confirmDeleteClient(id,name) {
+  if(!confirm(`Supprimer "${name}" ?`)) return;
+  try {
+    if(!isDemo&&cfg.scriptUrl) await callScript('deleteClient',{id});
+    clients=clients.filter(c=>String(c.id)!==String(id));
+    renderClientTable(); updateClientCount(); toast(`🗑️ "${name}" supprimé`);
+  } catch(e){ clients=clients.filter(c=>String(c.id)!==String(id)); renderClientTable(); updateClientCount(); toast(`🗑️ "${name}" supprimé`); }
+}
+
+// ════════════════════════════════════════════════════════
+//  DÉPENSES
+// ════════════════════════════════════════════════════════
+function getCatType(v){return v.split('|')[1]||'100';}
+function getCatLabel(v){return v.split('|')[0];}
+function onCatChange() {
+  const t=getCatType(document.getElementById('dCat').value);
+  document.getElementById('pctDeductionGroup').style.display=t==='mixed'?'':'none';
+  document.getElementById('repasNote').style.display=t==='50'?'':'none';
+  if(t==='mixed'){
+    const lbl=getCatLabel(document.getElementById('dCat').value).toLowerCase();
+    const sel=document.getElementById('dPctDeduction');
+    if(lbl.includes('cellulaire')||lbl.includes('téléphone')) sel.value='50';
+    else if(lbl.includes('internet')) sel.value='30';
+    else if(lbl.includes('loyer')||lbl.includes('services')||lbl.includes('électricité')) sel.value='10';
+    else if(lbl.includes('véhicule')) sel.value='50';
+    else sel.value='50';
+  }
+  updateDepPreview();
+}
+function updateDepPreview() {
+  const t=getCatType(document.getElementById('dCat').value);
+  const total=parseFloat(document.getElementById('dAmount').value)||0;
+  const box=document.getElementById('depDeductionBox');
+  if(t!=='mixed'||total<=0){box.classList.remove('visible');return;}
+  const pct=parseInt(document.getElementById('dPctDeduction').value)||0;
+  const ded=round2(total*pct/100),nonDed=round2(total-ded),eco=round2(ded*0.36);
+  document.getElementById('ddTotal').textContent=`$${total.toFixed(2)}`;
+  document.getElementById('ddNonDed').textContent=nonDed>0?`-$${nonDed.toFixed(2)}`:'$0.00';
+  document.getElementById('ddDed').textContent=`$${ded.toFixed(2)}`;
+  document.getElementById('ddEco').textContent=`≈ $${eco.toFixed(2)} récupérés`;
+  box.classList.add('visible');
+}
+async function saveDepense() {
+  const date=v('dDate'),rawCat=document.getElementById('dCat').value;
+  const catLabel=getCatLabel(rawCat),catType=getCatType(rawCat);
+  const totalAmt=parseFloat(v('dAmount'));
+  if(!date||!totalAmt||totalAmt<=0){toast('⚠️ Montant et date requis','warning');return;}
+  let pctDed=100,amountDed=totalAmt;
+  if(catType==='mixed'){pctDed=parseInt(document.getElementById('dPctDeduction').value)||100;amountDed=round2(totalAmt*pctDed/100);}
+  else if(catType==='50'){pctDed=50;amountDed=round2(totalAmt*0.5);}
+  const dep={id:'d'+Date.now(),date,category:catLabel,pctDed,amountTotal:totalAmt,amountDed,notes:v('dNotes')};
+  try {
+    if(isDemo||!cfg.scriptUrl){depenses.push(dep);toast('✅ Dépense enregistrée (démo)');}
+    else{const res=await callScript('addDepense',dep);dep.id=res.id||dep.id;depenses.push(dep);toast(`✅ Dépense sauvegardée — $${amountDed.toFixed(2)} déductibles`);}
+    document.getElementById('dAmount').value=''; document.getElementById('dNotes').value='';
+    document.getElementById('depDeductionBox').classList.remove('visible');
+    renderDepenses();
+  } catch(e){toast('❌ '+e.message,'error');}
+}
+function renderDepenses() {
+  const y=document.getElementById('dAnnee').value;
+  const exp=depenses.filter(e=>e.date&&e.date.startsWith(String(y))).sort((a,b)=>b.date.localeCompare(a.date));
+  const el=document.getElementById('depensesList');
+  if(!exp.length){el.innerHTML='<div class="empty"><div class="empty-ico">💳</div><div class="txt-sm">Aucune dépense cette année</div></div>';return;}
+  const totDed=exp.reduce((a,e)=>a+(e.amountDed||0),0);
+  const totBrut=exp.reduce((a,e)=>a+(e.amountTotal||0),0);
+  el.innerHTML=`<div class="tw"><table>
+    <thead><tr><th>Date</th><th>Catégorie</th><th>Description</th><th>Payé</th><th>%</th><th>Déductible</th><th></th></tr></thead>
+    <tbody>${exp.map(e=>{
+      const pct=e.pctDed??100,amtD=e.amountDed??0,amtT=e.amountTotal??0;
+      return `<tr><td>${fmtDate(e.date)}</td><td><span class="badge badge-purple" style="white-space:normal;max-width:160px;display:inline-block;line-height:1.4">${e.category}</span></td>
+      <td>${e.notes||'—'}</td><td class="fw6">$${amtT.toFixed(2)}</td>
+      <td><span class="pct-pill${pct===100?' pct-pill-100':''}">${pct}%</span></td>
+      <td class="fw6 c-green">$${amtD.toFixed(2)}</td>
+      <td><button class="btn btn-danger" onclick="deleteDepense('${e.id}')">✕</button></td></tr>`;
+    }).join('')}</tbody>
+    <tfoot><tr><td class="tfoot" colspan="3">TOTAL ${y}</td><td class="tfoot">$${totBrut.toFixed(2)}</td><td class="tfoot"></td><td class="tfoot c-green">$${totDed.toFixed(2)}</td><td class="tfoot"></td></tr></tfoot>
+  </table></div>
+  <div class="alert alert-success" style="margin-top:12px">💰 <strong>Économie d'impôt estimée :</strong> ≈ $${(totDed*0.36).toFixed(0)} (TMI ~36%)</div>`;
+}
+async function deleteDepense(id) {
+  if(!confirm('Supprimer cette dépense ?')) return;
+  try {
+    if(!isDemo&&cfg.scriptUrl) await callScript('deleteDepense',{id});
+    depenses=depenses.filter(e=>String(e.id)!==String(id)); renderDepenses(); toast('🗑️ Dépense supprimée');
+  } catch(e){toast('❌ '+e.message,'error');}
+}
+
+// ════════════════════════════════════════════════════════
+//  RÉSUMÉ
+// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
+//  CALCUL FISCAL OFFICIEL — Revenu Québec + CRA 2024
+//  Sources: TP-1 2024 (ligne 350=$18,056 × 14%), TP-80 2024
+//  5 composantes: Impôt QC + Fédéral + QPP(×2) + RQAP + FSS
+// ════════════════════════════════════════════════════════════════
+
+// Impôt QC 2024 — grille 401 TP-1
+// Crédit perso ligne 350: $18,056 × 14% = $2,527.84
+function calcImpotQC(r){
+  if(r<=0) return 0;
+  const B=[[53255,.14],[106495,.19],[129590,.24],[Infinity,.2575]];
+  let t=0,p=0;
+  for(const[l,v]of B){if(r<=p)break;t+=(Math.min(r,l)-p)*v;p=l;}
+  return Math.max(0,t-18056*.14);
+}
+
+// Impôt fédéral 2024 — T1 CRA
+// Crédit perso: $15,705 × 15% = $2,355.75
+function calcImpotFed(r){
+  if(r<=0) return 0;
+  const B=[[57375,.15],[114750,.205],[158519,.26],[220000,.29],[Infinity,.33]];
+  let t=0,p=0;
+  for(const[l,v]of B){if(r<=p)break;t+=(Math.min(r,l)-p)*v;p=l;}
+  return Math.max(0,t-15705*.15);
+}
+
+// QPP 2024 — Annexe U, TP-1 (ligne 445)
+// Travailleur autonome paie les 2 parts: 12.80% ≤$68,500 + QPP2 8% ≤$73,200
+function calcQPP(r){
+  if(r<=3500) return 0;
+  const t1=Math.max(0,Math.min(r,68500)-3500)*.1280;
+  const t2=Math.max(0,Math.min(r,73200)-68500)*.08;
+  return t1+t2;
+}
+
+// RQAP 2024 — Annexe R, TP-1 (ligne 439)
+// Taux autonome: 0.878% sur max $94,000
+function calcRQAP(r){ return Math.min(r,94000)*.00878; }
+
+// FSS 2024 — Annexe F, TP-1 (ligne 446)
+// Fonds services santé — taux progressif pour travailleur autonome
+function calcFSS(r){
+  if(r<=0) return 0;
+  if(r<=14399) return r*.01;
+  if(r<=55400) return 144+(r-14399)*.0326;
+  return 1481+(r-55400)*.0426;
+}
+
+// CALCUL COMPLET TP-1 2024 — retourne % à mettre de côté + détail
+// revenuNetClinique = sessions × $105 (après 30% clinique, TP-80 ligne 264)
+// depensesDeductibles = total dépenses TP-80 (OPQ, internet, assurance...)
+function calcFiscalComplet(revenuNetClinique, depensesDeductibles){
+  if(revenuNetClinique<=0) return {pct:0,total:0,net:0,detail:{}};
+  depensesDeductibles = depensesDeductibles||0;
+
+  // TP-80 ligne 264: revenu net d'entreprise
+  const revEntreprise = Math.max(0, revenuNetClinique - depensesDeductibles);
+
+  // Cotisations sociales (calculées sur revenu d'entreprise)
+  const qpp  = calcQPP(revEntreprise);
+  const rqap = calcRQAP(revEntreprise);
+  const fss  = calcFSS(revEntreprise);
+
+  // TP-1 ligne 248: déduction 50% QPP → réduit revenu imposable
+  const revImp = Math.max(0, revEntreprise - qpp/2);
+
+  // Impôts sur le revenu imposable
+  const fed = calcImpotFed(revImp);
+  const qc  = calcImpotQC(revImp);
+
+  const total = fed+qc+qpp+rqap+fss;
+  const pct   = Math.round(total/revenuNetClinique*1000)/10;
+  return {
+    pct,
+    total:round2(total),
+    net:round2(revenuNetClinique-total),
+    detail:{fed:round2(fed),qc:round2(qc),qpp:round2(qpp),rqap:round2(rqap),fss:round2(fss)}
+  };
+}
+
+// Compatibilité avec code existant
+function estimarImpuestos(r){ return calcImpotFed(r)+calcImpotQC(r); }
+function estimarCotizaciones(r){ return calcQPP(r)+calcRQAP(r)+calcFSS(r); }
+
+function loadResume() {
+  const m=parseInt(document.getElementById('rMois').value);
+  const y=parseInt(document.getElementById('rAnnee').value);
+  const moisStr=`${MOIS[m-1]} ${y}`;
+  const sessMois=sessions.filter(s=>s.Mois===moisStr);
+  const sessAnnee=sessions.filter(s=>s.Mois&&s.Mois.includes(String(y)));
+  const netAnnuel=sessAnnee.reduce((a,s)=>a+Number(s.Net),0);
+  const expAnnee=depenses.filter(e=>e.date&&e.date.startsWith(String(y)));
+  const totalDep=expAnnee.reduce((a,e)=>a+(e.amountDed||0),0);
+
+  // Même logique que Facture: projeter sur année complète si peu de mois enregistrés
+  // pour éviter un taux fiscal faussement bas (~5% avec 1 seul mois)
+  const moisUniques=new Set(sessAnnee.map(s=>s.Mois)).size||1;
+  const netMoisActuel=sessMois.reduce((a,s)=>a+Number(s.Net),0);
+  const netProjette=netMoisActuel>0?netMoisActuel*12:netAnnuel*(12/moisUniques);
+  const baseCalcFiscal=Math.max(netAnnuel,netProjette);
+
+  // Calcul officiel TP-1 2024 — 5 composantes
+  const fiscal=calcFiscalComplet(baseCalcFiscal, totalDep);
+  const tauxEff=baseCalcFiscal>0?fiscal.total/baseCalcFiscal:0.40;
+
+  // Affichage basé sur le net annuel RÉEL enregistré
+  const taxesReelles=round2(netAnnuel*tauxEff);
+  const revReel=netAnnuel-totalDep-taxesReelles;
+
+  document.getElementById('stNetAnnee').textContent=netAnnuel>0?`$${netAnnuel.toFixed(0)}`:'—';
+  document.getElementById('stDepenses').textContent=totalDep>0?`-$${totalDep.toFixed(0)}`:'—';
+  document.getElementById('stTaxes').textContent=taxesReelles>0?`-$${taxesReelles.toFixed(0)}`:'—';
+  document.getElementById('stReal').textContent=revReel>0?`$${revReel.toFixed(0)}`:'—';
+
+  // Calcul de l'économie fiscale réelle des dépenses
+  if(totalDep>0 && netAnnuel>0) {
+    const fiscalSansDep = calcFiscalComplet(baseCalcFiscal, 0);
+    const fiscalAvecDep = calcFiscalComplet(baseCalcFiscal, totalDep);
+    const economieFiscale = round2(fiscalSansDep.total - fiscalAvecDep.total);
+    const pctEconomie = round2(economieFiscale / totalDep * 100);
+    const economieParMois = round2(economieFiscale / 12);
+
+    document.getElementById('depEconomieCard').style.display='';
+    document.getElementById('depEconomieContent').innerHTML=`
+      <div class="g2" style="gap:12px;margin-bottom:16px">
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius-sm);padding:14px;text-align:center">
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Économie fiscale / an</div>
+          <div style="font-family:'DM Serif Display',serif;font-size:26px;color:var(--accent)">$${economieFiscale.toFixed(0)}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">$${economieParMois.toFixed(0)}/mois</div>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius-sm);padding:14px;text-align:center">
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Pour chaque $100 dépensé</div>
+          <div style="font-family:'DM Serif Display',serif;font-size:26px;color:var(--accent)">$${pctEconomie.toFixed(0)}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">récupérés en impôts</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.7;background:var(--surface2);padding:12px;border-radius:var(--radius-sm)">
+        <strong>Comment ça marche :</strong> Vos $${totalDep.toFixed(0)} de dépenses déductibles (TP-80) réduisent votre revenu imposable de $${totalDep.toFixed(0)}.
+        Sans ces dépenses, vous paieriez <span style="color:var(--danger)">$${fiscalSansDep.total.toFixed(0)}</span> d'impôts.
+        Avec elles, vous payez <span style="color:var(--accent)">$${fiscalAvecDep.total.toFixed(0)}</span> — une économie réelle de <strong>$${economieFiscale.toFixed(0)}</strong>.
+        Votre taux marginal combiné est d'environ <strong>${pctEconomie.toFixed(0)}%</strong> — chaque dollar dépensé professionnellement vous en rapporte ${(pctEconomie/100).toFixed(2)} en moins d'impôts.
+      </div>`;
+  } else {
+    document.getElementById('depEconomieCard').style.display='none';
+  }
+
+  const freq={};
+  sessMois.forEach(s=>{const k=`${s.Prénom||''} ${s.Nom||s.Client||''}`.trim();freq[k]=(freq[k]||0)+1;});
+  const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  document.getElementById('topClients').innerHTML=sorted.length
+    ? sorted.map(([name,count],i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div class="flex aic gap8"><span style="width:22px;height:22px;background:var(--accent-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent)">${i+1}</span><span>${name}</span></div>
+        <span class="badge badge-green">${count} sess.</span></div>`).join('')
+    : '<div class="empty" style="padding:28px 0"><div class="txt-sm">Aucune donnée ce mois</div></div>';
+
+  const tarifs={};
+  sessMois.forEach(s=>{tarifs[`$${s.Tarif}`]=(tarifs[`$${s.Tarif}`]||0)+1;});
+  document.getElementById('tarifBreak').innerHTML=Object.entries(tarifs).sort().map(([t,c])=>{
+    const pct2=Math.round(c/sessMois.length*100);
+    return `<div style="margin-bottom:18px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span>Tarif ${t}</span><span><strong>${c}</strong> sess. (${pct2}%)</span></div>
+    <div style="background:var(--border);border-radius:99px;height:8px"><div style="background:var(--accent);border-radius:99px;height:8px;width:${pct2}%;transition:width .4s"></div></div></div>`;
+  }).join('')||'<div class="empty" style="padding:28px 0"><div class="txt-sm">Aucune donnée ce mois</div></div>';
+}
+
+// ════════════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════
+//  EDIT & DELETE SESSION
+// ════════════════════════════════════════════════════════
+let editingSessionDate = null;
+let editingSessionIdx  = -1;
+
+function editSession(i) {
+  const selDate=document.getElementById('sDate').value||today;
+  const todaySess=sessions.filter(s=>normalizeDate(s.Date_Session)===selDate);
+  const s=todaySess[i];
+  if(!s) return;
+  editingSessionDate=selDate; editingSessionIdx=i;
+  document.getElementById('editDate').value=normalizeDate(s.Date_Session);
+  document.getElementById('editClientName').value=(s.Prénom||'')+' '+(s.Nom||'');
+  document.getElementById('editTarif').value=s.Tarif;
+  document.getElementById('editNotes').value=s.Notes||'';
+  document.getElementById('editPctLbl').textContent=cfg.pct||30;
+  unselectEditTarifBtns();
+  const t=Number(s.Tarif);
+  if(t===120)document.getElementById('et120').classList.add('active');
+  else if(t===140)document.getElementById('et140').classList.add('active');
+  else if(t===150)document.getElementById('et150').classList.add('active');
+  else document.getElementById('etOther').classList.add('active');
+  updateEditPreview();
+  document.getElementById('editSessionModal').classList.add('open');
+}
+
+function setEditTarif(val){
+  unselectEditTarifBtns();
+  const map={120:'et120',140:'et140',150:'et150'};
+  if(map[val])document.getElementById(map[val]).classList.add('active');
+  else document.getElementById('etOther').classList.add('active');
+  if(val>0)document.getElementById('editTarif').value=val;
+  updateEditPreview();
+}
+
+function unselectEditTarifBtns(){
+  ['et120','et140','et150','etOther'].forEach(id=>{var el=document.getElementById(id);if(el)el.classList.remove('active');});
+}
+
+function updateEditPreview(){
+  const t=parseFloat(document.getElementById('editTarif').value)||0,p=cfg.pct||30;
+  if(!t){document.getElementById('editFrais').textContent='—';document.getElementById('editNet').textContent='—';return;}
+  document.getElementById('editFrais').textContent='-$'+round2(t*p/100).toFixed(2);
+  document.getElementById('editNet').textContent='$'+round2(t-round2(t*p/100)).toFixed(2);
+}
+
+async function saveEditSession(){
+  const newDate=document.getElementById('editDate').value;
+  const newTarif=parseFloat(document.getElementById('editTarif').value);
+  const newNotes=document.getElementById('editNotes').value.trim();
+  if(!newDate||!newTarif){toast('⚠️ Date et tarif requis','warning');return;}
+  const selDate=editingSessionDate;
+  const todaySess=sessions.filter(s=>normalizeDate(s.Date_Session)===selDate);
+  const s=todaySess[editingSessionIdx];
+  if(!s){toast('❌ Session introuvable','error');return;}
+  const mainIdx=sessions.findIndex(ms=>normalizeDate(ms.Date_Session)===selDate&&ms.Prénom===s.Prénom&&ms.Nom===s.Nom&&String(ms.Tarif)===String(s.Tarif));
+  if(mainIdx<0){toast('❌ Session introuvable','error');return;}
+  const p=cfg.pct||30,frais=round2(newTarif*p/100),net=round2(newTarif-frais);
+  const parts=newDate.split('-'),mois=MOIS[parseInt(parts[1])-1]+' '+parts[0];
+  const facture=String(parseInt(parts[1])).padStart(2,'0')+'-'+parts[0].slice(-2);
+  const updated={...sessions[mainIdx],Date_Session:newDate,Tarif:newTarif,Frais:frais,Net:net,Mois:mois,Facture:facture,Notes:newNotes};
+  const btn=document.querySelector('#editSessionModal .btn-primary');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>';}
+  try{
+    if(isDemo||!cfg.scriptUrl){sessions[mainIdx]=updated;toast('✅ Session modifiée (démo)');}
+    else{
+      await callScript('deleteSession',{date:normalizeDate(s.Date_Session),prenom:s.Prénom,nom:s.Nom,tarif:String(s.Tarif)});
+      await callScript('addSession',updated);
+      sessions[mainIdx]=updated;
+      toast('✅ Session modifiée');
+    }
+    closeModal('editSessionModal');
+    loadTodaySessions();
+  }catch(e){toast('❌ '+e.message,'error');}
+  finally{if(btn){btn.disabled=false;btn.innerHTML='💾 Sauvegarder';}}
+}
+
+async function deleteSession(i){
+  const selDate=document.getElementById('sDate').value||today;
+  const todaySess=sessions.filter(s=>normalizeDate(s.Date_Session)===selDate);
+  const s=todaySess[i];
+  if(!s) return;
+  if(!confirm('Supprimer la session de '+(s.Prénom||'')+' '+(s.Nom||'')+' ($'+s.Tarif+') ?')) return;
+  const mainIdx=sessions.findIndex(ms=>normalizeDate(ms.Date_Session)===selDate&&ms.Prénom===s.Prénom&&ms.Nom===s.Nom&&String(ms.Tarif)===String(s.Tarif));
+  try{
+    if(!isDemo&&cfg.scriptUrl) await callScript('deleteSession',{date:normalizeDate(s.Date_Session),prenom:s.Prénom,nom:s.Nom,tarif:String(s.Tarif)});
+    if(mainIdx>=0) sessions.splice(mainIdx,1);
+    toast('🗑️ Session supprimée');
+    loadTodaySessions();
+  }catch(e){if(mainIdx>=0)sessions.splice(mainIdx,1);loadTodaySessions();toast('🗑️ Session supprimée');}
+}
+
+
+// ════════════════════════════════════════════════════════
+//  SIMULATEUR STRATÉGIQUE
+// ════════════════════════════════════════════════════════
+function setStratTarif(val) {
+  unselectStratTarifBtns();
+  const map={120:'st120',140:'st140',150:'st150',175:'st175'};
+  if(map[val]) document.getElementById(map[val]).classList.add('active');
+  document.getElementById('sPrix').value=val;
+  simuler();
+}
+function unselectStratTarifBtns(){
+  ['st120','st140','st150','st175'].forEach(id=>{var el=document.getElementById(id);if(el)el.classList.remove('active');});
+}
+
+function onSessionsMoisInput() {
+  const sessM = parseFloat(document.getElementById('sSessionsMois').value);
+  const prix  = parseFloat(document.getElementById('sPrix').value)||150;
+  const pctClin = (parseFloat(document.getElementById('sPctClinique').value)||30)/100;
+  const sem   = parseFloat(document.getElementById('sSemainesNum').value)||48;
+
+  if (!sessM || sessM <= 0) {
+    document.getElementById('sSessionsMoisInfo').style.display='none';
+    return;
+  }
+
+  // Calculer patients/semaine depuis sessions/mois
+  const sessAn  = sessM * 12;
+  const pacSem  = sessAn / sem;
+
+  // Mettre à jour le slider patients
+  document.getElementById('sPatientsNum').value   = pacSem.toFixed(1);
+  document.getElementById('sPatientsRange').value = Math.round(pacSem);
+
+  // Afficher info
+  const netMois = sessM * prix * (1 - pctClin);
+  document.getElementById('sSessionsMoisInfo').style.display = '';
+  document.getElementById('sSessionsMoisInfo').innerHTML =
+    `${sessM} sessions × $${(prix*(1-pctClin)).toFixed(0)} net = <strong>$${netMois.toFixed(0)}/mois</strong> · ~${pacSem.toFixed(1)} patients/semaine`;
+
+  simuler();
+}
+
+function simuler() {
+  const prix     = parseFloat(document.getElementById('sPrix').value)||150;
+  const pctClin  = (parseFloat(document.getElementById('sPctClinique').value)||30)/100;
+  const patients = parseFloat(document.getElementById('sPatientsNum').value)||18;
+  const semaines = parseFloat(document.getElementById('sSemainesNum').value)||48;
+  const depAnnee = parseFloat(document.getElementById('sDepenses').value)||0;
+
+  const brut    = prix * patients * semaines;
+  const comis   = brut * pctClin;
+  const netClin = brut - comis;  // revenu net clinique ($105/session)
+
+  const fiscal  = calcFiscalComplet(netClin, depAnnee);
+  const poche   = fiscal.net;
+  const heures  = patients * semaines;
+  const parHeure = poche / heures;
+
+  // KPIs
+  document.getElementById('skNetAn').textContent    = '$'+netClin.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  const sessParMois = patients * semaines / 12;
+  document.getElementById('skNetAnSub').textContent  = '$'+(netClin/12).toFixed(0)+'/mois · '+sessParMois.toFixed(0)+' sessions/mois';
+  document.getElementById('skImpots').textContent   = '-$'+fiscal.total.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  document.getElementById('skImpotsP').textContent  = fiscal.pct.toFixed(1)+'% du net clinique';
+  document.getElementById('skPoche').textContent    = '$'+poche.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  document.getElementById('skPocheMois').textContent = '$'+(poche/12).toFixed(0)+'/mois · $'+(poche/semaines).toFixed(0)+'/sem';
+  document.getElementById('skHeure').textContent    = '$'+parHeure.toFixed(2);
+
+  // Semanal / Mensual
+  const fmt = n => '$'+n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  const netSem   = netClin / semaines;
+  const impSem   = fiscal.total / semaines;
+  const dispSem  = poche / semaines;
+  const netMois  = netClin / 12;
+  const impMois  = fiscal.total / 12;
+  const dispMois = poche / 12;
+
+  document.getElementById('skSemIngresas').textContent  = fmt(netSem);
+  document.getElementById('skSemGuardar').textContent   = fmt(impSem);
+  document.getElementById('skSemDisp').textContent      = fmt(dispSem);
+  document.getElementById('skMoisIngresas').textContent = fmt(netMois);
+  document.getElementById('skMoisGuardar').textContent  = fmt(impMois);
+  document.getElementById('skMoisDisp').textContent     = fmt(dispMois);
+
+  // Décomposition fiscale
+  const d = fiscal.detail;
+  const bars = [
+    {label:'Impôt Québec (TP-1)',   val:d.qc,   color:'#dc2626'},
+    {label:'Impôt Fédéral (T1)',    val:d.fed,  color:'#b91c1c'},
+    {label:'QPP (Annexe U)',        val:d.qpp,  color:'#d97706'},
+    {label:'RQAP (Annexe R)',       val:d.rqap, color:'#f59e0b'},
+    {label:'FSS (Annexe F)',        val:d.fss,  color:'#6b7280'},
+  ];
+  document.getElementById('stratFiscal').innerHTML = bars.map(b => {
+    const pct = fiscal.total > 0 ? (b.val/fiscal.total*100).toFixed(0) : 0;
+    const w   = fiscal.total > 0 ? (b.val/netClin*100).toFixed(1) : 0;
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+        <span>${b.label}</span>
+        <span style="font-weight:600">$${b.val.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',')} <span style="color:var(--text3);font-weight:400">(${w}%)</span></span>
+      </div>
+      <div style="background:var(--border);border-radius:99px;height:7px">
+        <div style="background:${b.color};border-radius:99px;height:7px;width:${pct}%;transition:width .4s"></div>
+      </div>
+    </div>`;
+  }).join('') + `<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding-top:10px;border-top:2px solid var(--border)">
+    <span>TOTAL À METTRE DE CÔTÉ</span>
+    <span>$${fiscal.total.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',')} (${fiscal.pct.toFixed(1)}%)</span>
+  </div>`;
+
+  // Lecture stratégique
+  const msgs = [];
+
+  // Agenda optimale
+  if(patients < 15) msgs.push({icon:'📈', txt:'<b>Moins de 15 patients/sem :</b> marge de croissance importante. Chaque patient supplémentaire ajoute $'+(prix*(1-pctClin)*(1-fiscal.pct/100)*semaines/semaines).toFixed(0)+'/sem net.'});
+  else if(patients <= 20) msgs.push({icon:'✅', txt:'<b>Zone optimale (15-20 patients/sem) :</b> bon équilibre revenu / charge clinique.'});
+  else msgs.push({icon:'⚠️', txt:'<b>Plus de 20 patients/sem :</b> attention à la fatigue de compassion. Le $/heure effectif tend à baisser après 20 patients.'});
+
+  // Impact tarif
+  const diff5 = (prix+5)*(1-pctClin)*patients*semaines*(1-fiscal.pct/100) - poche;
+  msgs.push({icon:'💡', txt:`<b>+$5 par session</b> = +$${diff5.toFixed(0)} dans votre poche par an.`});
+
+  // Dépenses
+  if(depAnnee < 2000) msgs.push({icon:'🧾', txt:'<b>Dépenses déductibles faibles.</b> Pensez à déduire : OPQ ($'+Math.round(650).toLocaleString()+'), assurance resp., internet, formation.'});
+  else msgs.push({icon:'🧾', txt:`<b>Dépenses déductibles :</b> $${depAnnee.toLocaleString()} → économie fiscale estimée $${(depAnnee*fiscal.pct/100).toFixed(0)}.`});
+
+  // Vacances
+  const diffVac = (50-semaines);
+  if(diffVac>0) msgs.push({icon:'🏖️', txt:`<b>${diffVac} semaines de vacances/an</b> → coût net : $${(diffVac*(prix*(1-pctClin))*(1-fiscal.pct/100)*patients).toFixed(0)}.`});
+
+  document.getElementById('stratLecture').innerHTML = msgs.map(m =>
+    `<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);font-size:13.5px;line-height:1.6">
+      <span style="font-size:20px;flex-shrink:0">${m.icon}</span><span>${m.txt}</span>
+    </div>`
+  ).join('');
+}
+
+function showTab(tab) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(tab==='facture') loadFacture();
+  if(tab==='depenses') renderDepenses();
+  if(tab==='clients'){renderClientTable();updateClientCount();}
+  if(tab==='resume') loadResume();
+  if(tab==='strategie') simuler();
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function v(id){return document.getElementById(id).value.trim();}
+function round2(n){return Math.round(n*100)/100;}
+function normalizeDate(d){
+  if(!d) return '';
+  var s=String(d).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  var iso=s.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if(iso) return iso[1]+'-'+iso[2]+'-'+iso[3];
+  var m=s.match(/([A-Za-z]{3})\s+(\d{1,2})\s+(\d{4})/);
+  if(m){var mo={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};return m[3]+'-'+(mo[m[1]]||'01')+'-'+m[2].padStart(2,'0');}
+  return s;
+}
+function fmtDate(d){
+  if(!d) return '—';
+  var s=String(d).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)){var p=s.split('-');return p[2]+'-'+p[1]+'-'+p[0];}
+  var iso=s.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if(iso) return iso[3]+'-'+iso[2]+'-'+iso[1];
+  var m=s.match(/([A-Za-z]+)\s+(\d{1,2})\s+(\d{4})/);
+  if(m){var mo={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};return m[2].padStart(2,'0')+'-'+(mo[m[1].substring(0,3)]||'01')+'-'+m[3];}
+  return s;
+}
+document.querySelectorAll('.mbg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');}));
+let toastTimer;
+function toast(msg,type='success'){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.style.background=type==='error'?'var(--danger)':type==='warning'?'var(--warning)':'var(--accent)';
+  el.style.transform='translateX(-50%) translateY(0)'; el.style.opacity='1';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{el.style.transform='translateX(-50%) translateY(80px)';el.style.opacity='0';},3500);
+}
+</script>
+</body>
+</html>

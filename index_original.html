@@ -55,7 +55,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .fc::placeholder { color: var(--text3); }
 select.fc { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23999' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
 
-/* ── CLIENT AUTOCOMPLETE ── */
 .client-autocomplete { position: relative; }
 .client-input-wrap { position: relative; }
 .client-input-wrap .search-ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 14px; pointer-events: none; }
@@ -476,10 +475,10 @@ tbody td { padding: 11px 15px; }
   <div class="g4 mb20">
     <div class="stat"><div class="stat-ico">💰</div><div class="stat-lbl">Revenu Net (Clinique)</div><div class="stat-val" id="stNetAnnee">—</div><div class="stat-sub">Après frais clinique · YTD</div></div>
     <div class="stat"><div class="stat-ico">💳</div><div class="stat-lbl">Dépenses Pro</div><div class="stat-val c-red" id="stDepenses">—</div><div class="stat-sub">Déductibles TP-80</div></div>
-    <div class="stat"><div class="stat-ico">🏛️</div><div class="stat-lbl">Impôts estimés</div><div class="stat-val c-red" id="stTaxes">—</div><div class="stat-sub">QC + Féd + QPP + RQAP + FSS</div></div>
+    <div class="stat"><div class="stat-ico">🏛️</div><div class="stat-lbl">Impôts estimados</div><div class="stat-val c-red" id="stTaxes">—</div><div class="stat-sub">QC + Féd + QPP + RQAP + FSS</div></div>
     <div class="stat"><div class="stat-ico">💵</div><div class="stat-lbl">Dans vos poches</div><div class="stat-val c-green" id="stReal">—</div><div class="stat-sub">Net après tout</div></div>
   </div>
-  <div class="alert alert-info">💡 Les impôts sont estimés avec le <strong>taux annuel projeté</strong> (TP-1 2024 : QC + Fédéral + QPP + RQAP + FSS). Basé sur le mois sélectionné × 12 si peu de mois sont enregistrés.</div>
+  <div class="alert alert-info">💡 Les impôts sont estimados avec le <strong>taux annuel projeté</strong> (TP-1 2024 : QC + Fédéral + QPP + RQAP + FSS). Basé sur le mois sélectionné × 12 si peu de mois sont enregistrés.</div>
   <div class="card mb20" id="depEconomieCard" style="display:none">
     <div class="card-title" style="font-size:16px">💡 Économie fiscale de vos dépenses</div>
     <div id="depEconomieContent"></div>
@@ -505,7 +504,6 @@ tbody td { padding: 11px 15px; }
   <div class="card aide-sec mb20">
     <h3>🏦 Pourquoi 40% — La règle de provision fiscale</h3>
     <p>La facture mensuelle affiche toujours <strong>40% à mettre de côté</strong>. Voici pourquoi ce chiffre a été choisi et comment il a été calculé.</p>
-
     <h4>Base de calcul — Formulaires officiels TP-1 2024</h4>
     <p>Le taux de 40% est basé sur le calcul officiel de <strong>5 composantes</strong> selon les formulaires Revenu Québec et CRA :</p>
     <ul>
@@ -515,7 +513,6 @@ tbody td { padding: 11px 15px; }
       <li><strong>RQAP</strong> — Annexe R, TP-1. Assurance parentale : 0.878% sur max $94,000.</li>
       <li><strong>FSS</strong> — Annexe F, TP-1. Fonds services de santé : taux progressif de 1% à 4.26%.</li>
     </ul>
-
     <h4>Résultats calculés pour 16–20 patients/semaine (48 semaines)</h4>
     <div class="tw" style="margin:12px 0">
       <table>
@@ -527,9 +524,8 @@ tbody td { padding: 11px 15px; }
         </tbody>
       </table>
     </div>
-
     <h4>Pourquoi 40% fixe et non le taux calculé dynamiquement ?</h4>
-    <p>Nous avons testé le calcul dynamique mais il posait un problème important : avec seulement 1 ou 2 mois enregistrés, le revenu annuel projeté est faible et le taux fiscal calculé tombe à <strong>5–10%</strong> — ce qui est dangereux car il suggère de mettre trop peu de côté.</p>
+    <p>Nous avons testé le calcul dynamique mais il posait un problema important : avec seulement 1 ou 2 mois enregistrés, le revenu annuel projeté est faible et le taux fiscal calculé tombe à <strong>5–10%</strong> — ce qui est dangereux car il suggère de mettre trop peu de côté.</p>
     <p>Le <strong>40% fixe</strong> est le choix le plus prudent car :</p>
     <ul>
       <li>Il couvre le scénario de 20 patients/sem (taux réel exactement 40.0%)</li>
@@ -539,7 +535,6 @@ tbody td { padding: 11px 15px; }
     </ul>
     <div class="alert alert-success">✅ <strong>Règle pratique :</strong> Sur chaque paiement reçu de la clinique ($105/session), mettez <strong>$42</strong> de côté pour les impôts et cotisations. Le reste ($63) est réellement disponible.</div>
     <div class="alert alert-warning">⚠️ <strong>Note :</strong> Ce taux ne tient pas compte de déductions supplémentaires (REER, frais de garde, etc.) qui pourraient le réduire. Pour une planification fiscale complète, consultez un comptable.</div>
-
     <h4>Vérifiez vous-même avec la pestaña Stratégie</h4>
     <p>La pestaña <strong>🎯 Stratégie</strong> utilise le même calcul TP-1 2024 mais de façon dynamique sur un revenu annuel complet. Entrez 48 semaines et votre nombre réel de patients pour voir votre taux fiscal personnalisé.</p>
   </div>
@@ -574,9 +569,7 @@ tbody td { padding: 11px 15px; }
     <h4>Mise à jour du script</h4>
     <p>Si vous modifiez le script, allez dans <strong>Implémenter → Administrer les déploiements → ✏️ → Nouvelle version → Implémenter</strong>. Puis mettez à jour l'URL dans ⚙️ Config et faites 🔄 Synchroniser.</p>
   </div>
-
 </div>
-
 
 <div class="page" id="page-strategie">
   <div class="flex jsb aic mb20" style="flex-wrap:wrap;gap:12px">
@@ -701,8 +694,36 @@ tbody td { padding: 11px 15px; }
     </div>
   </div>
 </div>
+</div><div class="mbg" id="editSessionModal">
+<div class="modal">
+  <div class="modal-title">✏️ Modifier la session</div>
+  <div class="g2">
+    <div class="fg"><label class="fl">Date</label><input type="date" class="fc" id="editDate"></div>
+    <div class="fg"><label class="fl">Client</label><input type="text" class="fc" id="editClientName" disabled style="background:#f0f0f0"></div>
+  </div>
+  <div class="fg">
+    <label class="fl">Tarif ($)</label>
+    <div class="tarif-btns" style="margin-bottom:8px">
+      <button class="tbtn" onclick="setEditTarif(120)" id="et120">$120</button>
+      <button class="tbtn" onclick="setEditTarif(140)" id="et140">$140</button>
+      <button class="tbtn" onclick="setEditTarif(150)" id="et150">$150</button>
+      <button class="tbtn" onclick="setEditTarif(0)" id="etOther">Autre</button>
+    </div>
+    <input type="number" class="fc" id="editTarif" oninput="updateEditPreview();unselectEditTarifBtns()">
+  </div>
+  <div class="fg"><label class="fl">Notes</label><input type="text" class="fc" id="editNotes"></div>
+  <div class="preview">
+    <div class="preview-row"><span class="lbl">Frais clinique (<span id="editPctLbl">30</span>%)</span><span id="editFrais" class="c-red"></span></div>
+    <div class="preview-row"><span class="lbl">✅ Net</span><span id="editNet" class="c-green"></span></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" onclick="closeModal('editSessionModal')">Annuler</button>
+    <button class="btn btn-primary" onclick="saveEditSession()">💾 Sauvegarder</button>
+  </div>
+</div>
+</div>
 
-</div><div class="mbg" id="cfgModal">
+<div class="mbg" id="cfgModal">
 <div class="modal">
   <div class="modal-title">⚙️ Configuration</div>
   <div class="alert alert-info">ℹ️ Paramètres sauvegardés localement dans votre navigateur.</div>
@@ -766,12 +787,15 @@ tbody td { padding: 11px 15px; }
 
 <script>
 // ════════════════════════════════════════════════════════
-//  STATE
+//  STATE & CONSTANTS
 // ════════════════════════════════════════════════════════
 let cfg = {}, clients = [], sessions = [], depenses = [], isDemo = false;
-let selectedClient = null; // { Prénom, Nom, Téléphone, ... }
+let selectedClient = null;
 let highlightedIndex = -1;
 let currentWeek = 1;
+let editingSessionDate = null;
+let editingSessionIdx = -1;
+let toastTimer;
 
 const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const JOURS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
@@ -785,14 +809,14 @@ const DEMO_CLIENTS = [
   {id:'2',Prénom:'Pascale',Nom:'Roussin',Téléphone:'418-573-7580',Date_Naissance:'1969-12-26',Date_Appel:'2026-03-13',Sexe:'Féminin',Actif:'Oui'},
   {id:'3',Prénom:'Bobby',Nom:'Nadeau',Téléphone:'(418) 234-6050',Date_Naissance:'1990-03-23',Date_Appel:'2026-03-09',Sexe:'Masculin',Actif:'Oui'},
   {id:'4',Prénom:'Christine',Nom:'Hamel',Téléphone:'514-794-7888',Date_Naissance:'1957-06-20',Date_Appel:'2026-03-04',Sexe:'Féminin',Actif:'Oui'},
-  {id:'5',Prénom:'David',Nom:'Boivin',Téléphone:'418-803-4861',Date_Naissance:'1989-08-30',Date_Appel:'2026-01-17',Sexe:'Masculin',Actif:'Oui'},
+  {id:'5',Prénom:'David',Nom:'Boivin',Téléphone:'418-803-4861',Date_Naissance:'1989-08-30',Date_Appel:'2026-01-17',Sexe:'Masculin',Actif:'Oui'}
 ];
 const DEMO_SESSIONS = [
   {Date_Session:today,Prénom:'Mathieu',Nom:'Guitor',Tarif:150,Frais:45,Net:105,Mois:`${MOIS[new Date().getMonth()]} ${new Date().getFullYear()}`,Facture:`${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getFullYear()).slice(-2)}`,Notes:''},
-  {Date_Session:today,Prénom:'Pascale',Nom:'Roussin',Tarif:150,Frais:45,Net:105,Mois:`${MOIS[new Date().getMonth()]} ${new Date().getFullYear()}`,Facture:`${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getFullYear()).slice(-2)}`,Notes:'Suivi'},
+  {Date_Session:today,Prénom:'Pascale',Nom:'Roussin',Tarif:150,Frais:45,Net:105,Mois:`${MOIS[new Date().getMonth()]} ${new Date().getFullYear()}`,Facture:`${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getFullYear()).slice(-2)}`,Notes:'Suivi'}
 ];
 const DEMO_DEPENSES = [
-  {id:'d1',date:'2026-04-01',category:'Cotisations prof. (OPQ)',pctDed:100,amountTotal:650,amountDed:650,notes:'Renouvellement annuel'},
+  {id:'d1',date:'2026-04-01',category:'Cotisations prof. (OPQ)',pctDed:100,amountTotal:650,amountDed:650,notes:'Renouvellement annuel'}
 ];
 
 // ════════════════════════════════════════════════════════
@@ -805,10 +829,11 @@ window.onload = () => {
   document.getElementById('dDate').value = today;
   updatePreview();
   setTarif(150);
-  // Close dropdown on outside click
+  
   document.addEventListener('click', e => {
     if (!e.target.closest('.client-autocomplete')) closeClientDropdown();
   });
+  
   if (cfg.demo) { enableDemo(true); return; }
   if (cfg.scriptUrl) {
     document.getElementById('setupBanner').style.display='none';
@@ -863,7 +888,6 @@ function renderClientDropdown(matches, q) {
   }
   dd.innerHTML = matches.map((c, i) => {
     const fullName = `${c.Prénom} ${c.Nom}`;
-    // Highlight matching part
     const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
     const hlName = fullName.replace(re, '<span class="opt-match">$1</span>');
     const detail = c.Téléphone ? `📞 ${c.Téléphone}` : '';
@@ -873,7 +897,6 @@ function renderClientDropdown(matches, q) {
     </div>`;
   }).join('');
   dd.classList.add('open');
-  // Store matches for keyboard navigation
   dd._matches = matches;
 }
 
@@ -927,7 +950,7 @@ function updateHighlight() {
 }
 
 // ════════════════════════════════════════════════════════
-//  CONFIG
+//  CONFIG & SYNC
 // ════════════════════════════════════════════════════════
 function loadCfg() {
   try { cfg = JSON.parse(localStorage.getItem('clinique360_cfg')||'{}'); } catch(e){ cfg={}; }
@@ -938,6 +961,7 @@ function loadCfg() {
   if(!cfg.adresse) cfg.adresse='2480 Ch Ste-Foy #200, Québec City, QC G1V 1T6';
   if(!cfg.tel) cfg.tel='(418) 952-1723';
 }
+
 function openConfig() {
   loadCfg();
   document.getElementById('cNomPro').value=cfg.nomPro||'';
@@ -950,6 +974,7 @@ function openConfig() {
   document.getElementById('cDemo').checked=!!cfg.demo;
   document.getElementById('cfgModal').classList.add('open');
 }
+
 function saveConfig() {
   cfg.nomPro=v('cNomPro'); cfg.titrePro=v('cTitrePro'); cfg.nomClinique=v('cNomClinique');
   cfg.adresse=v('cAdresse'); cfg.tel=v('cTel'); cfg.pct=parseFloat(v('cPct'))||30;
@@ -960,6 +985,7 @@ function saveConfig() {
   if(cfg.demo){enableDemo(true);return;}
   if(cfg.scriptUrl){isDemo=false;document.getElementById('setupBanner').style.display='none';document.getElementById('syncBtn').style.display='';syncData();}
 }
+
 function enableDemo(silent=false) {
   isDemo=true; cfg.demo=true;
   clients=JSON.parse(JSON.stringify(DEMO_CLIENTS));
@@ -970,15 +996,13 @@ function enableDemo(silent=false) {
   setStatus('demo','Mode démo',clients.length+' clients');
   if(!silent) toast('🟡 Mode démo activé');
 }
+
 function updatePctUI() {
   const p=cfg.pct||30;
   document.getElementById('pctLabel').textContent=`Frais clinique : ${p}% · Votre part : ${100-p}%`;
   const el=document.getElementById('pPctLbl'); if(el) el.textContent=p;
 }
 
-// ════════════════════════════════════════════════════════
-//  GOOGLE SHEETS API
-// ════════════════════════════════════════════════════════
 async function callScript(action,data={}) {
   if(!cfg.scriptUrl) throw new Error('URL du script non configurée');
   const url=cfg.scriptUrl+'?action='+action+'&data='+encodeURIComponent(JSON.stringify(data));
@@ -988,6 +1012,7 @@ async function callScript(action,data={}) {
   try { const json=JSON.parse(text); if(json.error) throw new Error(json.error); return json; }
   catch(e) { throw new Error('Réponse invalide du script.'); }
 }
+
 async function syncData() {
   if(isDemo){setStatus('demo','Mode démo',clients.length+' clients');return;}
   if(!cfg.scriptUrl){setStatus('error','Non configuré','');return;}
@@ -1002,7 +1027,6 @@ async function syncData() {
     const d=await callScript('getDepenses');
     depenses=(d.data||[]).map(e=>({
       ...e,
-      // Normaliser TOUTES les clés + convertir date au format YYYY-MM-DD
       id:          e.id || e.Id || '',
       date:        normalizeDate(e.date || e.Date || ''),
       category:    e.category || e.Categorie || e.Category || '',
@@ -1023,12 +1047,14 @@ async function syncData() {
     toast('❌ '+e.message,'error');
   } finally { btn.disabled=false; btn.innerHTML='🔄 Synchroniser'; }
 }
+
 function setStatus(state,label,sub) {
   const pill=document.getElementById('statusPill'),dot=document.getElementById('statusDot'),txt=document.getElementById('statusText');
   pill.style.display='flex';
   const s={ok:{c:'#52b788',t:'✓ '+label+(sub?'  ·  '+sub:'')},error:{c:'#e74c3c',t:'✗ '+label+(sub?'  —  '+sub:'')},syncing:{c:'#f39c12',t:'↻ '+label},demo:{c:'#f39c12',t:'● Démo  ·  '+label},warn:{c:'#f39c12',t:'⚠ '+label}}[state]||{c:'#999',t:label};
   dot.style.background=s.c; txt.textContent=s.t;
 }
+
 async function testGoogleScript() {
   const url=document.getElementById('cScriptUrl').value.trim();
   if(!url){toast('⚠️ Entrez l\'URL d\'abord','warning');return;}
@@ -1037,7 +1063,7 @@ async function testGoogleScript() {
 }
 
 // ════════════════════════════════════════════════════════
-//  SESSIONS — avec Prénom et Nom séparés
+//  SESSIONS
 // ════════════════════════════════════════════════════════
 function setTarif(val) {
   ['t120','t140','t150','tOther'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
@@ -1047,7 +1073,9 @@ function setTarif(val) {
   document.getElementById('tarifInput').value=val>0?val:'';
   updatePreview();
 }
+
 function unselectTarifBtns(){['t120','t140','t150','tOther'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});}
+
 function updatePreview() {
   const t=parseFloat(document.getElementById('tarifInput').value)||0,p=cfg.pct||30;
   if(t<=0){['pTarif','pFrais','pTotal'].forEach(id=>document.getElementById(id).textContent='—');return;}
@@ -1073,7 +1101,6 @@ async function saveSession() {
   const mois=`${MOIS[dMonth]} ${parts[0]}`;
   const facture=`${String(dMonth+1).padStart(2,'0')}-${parts[0].slice(-2)}`;
 
-  // ── Structure propre : Prénom et Nom séparés ──
   const sess={
     Date_Session: date,
     Prénom: selectedClient.Prénom,
@@ -1121,7 +1148,7 @@ function loadTodaySessions() {
       <td><strong>${s.Prénom} ${s.Nom}</strong></td>
       <td>$${Number(s.Tarif).toFixed(2)}</td>
       <td class="c-green fw6">$${Number(s.Net).toFixed(2)}</td>
-      <td style="white-space:nowrap">
+      <td style="white-space:nowrap;text-align:right">
         <button class="btn btn-sm" style="background:#e8f4fd;color:#2c5282;border:1px solid #bee3f8;padding:4px 8px;font-size:11px" onclick="editSession(${i})">✏️</button>
         <button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;padding:4px 8px;font-size:11px;margin-left:4px" onclick="deleteSession(${i})">✕</button>
       </td>
@@ -1131,14 +1158,103 @@ function loadTodaySessions() {
 }
 
 // ════════════════════════════════════════════════════════
-//  FACTURE — getConfidentialName usa Prénom/Nom directamente
+//  EDIT & DELETE SESSION
+// ════════════════════════════════════════════════════════
+function editSession(i) {
+  const selDate=document.getElementById('sDate').value||today;
+  const todaySess=sessions.filter(s=>normalizeDate(s.Date_Session)===selDate);
+  const s=todaySess[i];
+  if(!s) return;
+  editingSessionDate=selDate; editingSessionIdx=i;
+  document.getElementById('editDate').value=normalizeDate(s.Date_Session);
+  document.getElementById('editClientName').value=(s.Prénom||'')+' '+(s.Nom||'');
+  document.getElementById('editTarif').value=s.Tarif;
+  document.getElementById('editNotes').value=s.Notes||'';
+  document.getElementById('editPctLbl').textContent=cfg.pct||30;
+  unselectEditTarifBtns();
+  const t=Number(s.Tarif);
+  if(t===120)document.getElementById('et120').classList.add('active');
+  else if(t===140)document.getElementById('et140').classList.add('active');
+  else if(t===150)document.getElementById('et150').classList.add('active');
+  else document.getElementById('etOther').classList.add('active');
+  updateEditPreview();
+  const modalEl = document.getElementById('editSessionModal');
+  if (modalEl) modalEl.classList.add('open');
+}
+
+function setEditTarif(val){
+  unselectEditTarifBtns();
+  const map={120:'et120',140:'et140',150:'et150'};
+  if(map[val])document.getElementById(map[val]).classList.add('active');
+  else document.getElementById('etOther').classList.add('active');
+  if(val>0)document.getElementById('editTarif').value=val;
+  updateEditPreview();
+}
+
+function unselectEditTarifBtns(){
+  ['et120','et140','et150','etOther'].forEach(id=>{var el=document.getElementById(id);if(el)el.classList.remove('active');});
+}
+
+function updateEditPreview(){
+  const t=parseFloat(document.getElementById('editTarif').value)||0,p=cfg.pct||30;
+  if(!t){document.getElementById('editFrais').textContent='—';document.getElementById('editNet').textContent='—';return;}
+  document.getElementById('editFrais').textContent='-$'+round2(t*p/100).toFixed(2);
+  document.getElementById('editNet').textContent='$'+round2(t-round2(t*p/100)).toFixed(2);
+}
+
+async function saveEditSession(){
+  const newDate=document.getElementById('editDate').value;
+  const newTarif=parseFloat(document.getElementById('editTarif').value);
+  const newNotes=document.getElementById('editNotes').value.trim();
+  if(!newDate||!newTarif){toast('⚠️ Date et tarif requis','warning');return;}
+  const selDate=editingSessionDate;
+  const todaySess=sessions.filter(s=>normalizeDate(s.Date_Session)===selDate);
+  const s=todaySess[editingSessionIdx];
+  if(!s){toast('❌ Session introuvable','error');return;}
+  const mainIdx=sessions.findIndex(ms=>normalizeDate(ms.Date_Session)===selDate&&ms.Prénom===s.Prénom&&ms.Nom===s.Nom&&String(ms.Tarif)===String(s.Tarif));
+  if(mainIdx<0){toast('❌ Session introuvable','error');return;}
+  const p=cfg.pct||30,frais=round2(newTarif*p/100),net=round2(newTarif-frais);
+  const parts=newDate.split('-'),mois=MOIS[parseInt(parts[1])-1]+' '+parts[0];
+  const facture=String(parseInt(parts[1])).padStart(2,'0')+'-'+parts[0].slice(-2);
+  const updated={...sessions[mainIdx],Date_Session:newDate,Tarif:newTarif,Frais:frais,Net:net,Mois:mois,Facture:facture,Notes:newNotes};
+  const btn=document.querySelector('#editSessionModal .btn-primary');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>';}
+  try{
+    if(isDemo||!cfg.scriptUrl){sessions[mainIdx]=updated;toast('✅ Session modifiée (démo)');}
+    else{
+      await callScript('deleteSession',{date:normalizeDate(s.Date_Session),prenom:s.Prénom,nom:s.Nom,tarif:String(s.Tarif)});
+      await callScript('addSession',updated);
+      sessions[mainIdx]=updated;
+      toast('✅ Session modifiée');
+    }
+    closeModal('editSessionModal');
+    loadTodaySessions();
+  }catch(e){toast('❌ '+e.message,'error');}
+  finally{if(btn){btn.disabled=false;btn.innerHTML='💾 Sauvegarder';}}
+}
+
+async function deleteSession(i){
+  const selDate=document.getElementById('sDate').value||today;
+  const todaySess=sessions.filter(s=>normalizeDate(s.Date_Session)===selDate);
+  const s=todaySess[i];
+  if(!s) return;
+  if(!confirm('Supprimer la session de '+(s.Prénom||'')+' '+(s.Nom||'')+' ($'+s.Tarif+') ?')) return;
+  const mainIdx=sessions.findIndex(ms=>normalizeDate(ms.Date_Session)===selDate&&ms.Prénom===s.Prénom&&ms.Nom===s.Nom&&String(ms.Tarif)===String(s.Tarif));
+  try{
+    if(!isDemo&&cfg.scriptUrl) await callScript('deleteSession',{date:normalizeDate(s.Date_Session),prenom:s.Prénom,nom:s.Nom,tarif:String(s.Tarif)});
+    if(mainIdx>=0) sessions.splice(mainIdx,1);
+    toast('🗑️ Session supprimée');
+    loadTodaySessions();
+  }catch(e){if(mainIdx>=0)sessions.splice(mainIdx,1);loadTodaySessions();toast('🗑️ Session supprimée');}
+}
+
+// ════════════════════════════════════════════════════════
+//  FACTURE
 // ════════════════════════════════════════════════════════
 function getConfidentialName(s) {
-  // s tiene Prénom y Nom como columnas separadas (nueva estructura)
   const prenom = (s.Prénom||'').trim();
   const nom    = (s.Nom||'').trim();
   if (prenom && nom) return nom.charAt(0).toUpperCase() + '. ' + prenom;
-  // Fallback para datos viejos que tenían columna Client="Prénom Nom"
   const full = (s.Client||'').trim();
   if (!full) return '—';
   const parts = full.split(' ');
@@ -1154,12 +1270,11 @@ function loadFacture() {
   const m=parseInt(document.getElementById('fMois').value);
   const y=parseInt(document.getElementById('fAnnee').value);
   const moisStr=`${MOIS[m-1]} ${y}`;
-  // SORT CRONOLÓGICO: de la fecha más antigua a la más reciente
+  
+  // Ordenamiento cronológico explícito
   const sess=sessions.filter(s=>s.Mois===moisStr).sort((a,b)=>normalizeDate(a.Date_Session).localeCompare(normalizeDate(b.Date_Session)));
 
-  // Taux fiscal fixe 40% — basé sur calcul officiel TP-1 2024
-  // (ImpQC + ImpFed + QPP×2 + RQAP + FSS) pour 16-20 patients/semaine
-  // Taux réel calculé: ~39-40%. On utilise 40% comme provision prudente.
+  // Lógica fiscal base: 40%
   const tauxEff = 0.40;
 
   const numF=`${String(m).padStart(2,'0')}-${String(y).slice(-2)}`;
@@ -1176,6 +1291,7 @@ function loadFacture() {
   const aMettreDecote = round2(totN * tauxEff);
   const netPoche      = round2(totN - aMettreDecote);
   const pctAffiche    = (tauxEff*100).toFixed(1);
+  
   document.getElementById('invStats').innerHTML=`
     <div>${sess.length} session(s)</div>
     <div>Total brut : <strong>$${totT.toFixed(2)}</strong></div>
@@ -1214,7 +1330,7 @@ function exportFacture() {
   const moisStr=`${MOIS[m-1]} ${y}`;
   const numF=`${String(m).padStart(2,'0')}-${String(y).slice(-2)}`;
   
-  // SORT CRONOLÓGICO: de la fecha más antigua a la más reciente
+  // Ordenamiento cronológico explícito
   const sess=sessions.filter(s=>s.Mois===moisStr).sort((a,b)=>normalizeDate(a.Date_Session).localeCompare(normalizeDate(b.Date_Session)));
   
   if(!sess.length){toast('⚠️ Aucune session','warning');return;}
@@ -1298,19 +1414,23 @@ function renderClientTable() {
     </tr>`;
   }).join('');
 }
+
 function filterClientTable() {
   const q=document.getElementById('ctSearch').value.toLowerCase();
   document.querySelectorAll('#clientTbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});
 }
+
 function updateClientCount() {
   const a=clients.filter(c=>c.Actif!=='Non').length;
   document.getElementById('clientCountLbl').textContent=`${a} clients actifs · ${clients.length} au total`;
 }
+
 function openAddClient() {
   ['ncPrénom','ncNom','ncTel','ncDdn'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ncSexe').value=''; document.getElementById('ncActif').value='Oui';
   document.getElementById('addClientModal').classList.add('open');
 }
+
 async function saveNewClient() {
   const prenom=v('ncPrénom'),nom=v('ncNom');
   if(!prenom||!nom){toast('⚠️ Prénom et Nom obligatoires','warning');return;}
@@ -1322,6 +1442,7 @@ async function saveNewClient() {
     closeModal('addClientModal'); renderClientTable(); updateClientCount();
   } catch(e){toast('❌ '+e.message,'error');}
 }
+
 async function confirmDeleteClient(id,name) {
   if(!confirm(`Supprimer "${name}" ?`)) return;
   try {
@@ -1336,6 +1457,7 @@ async function confirmDeleteClient(id,name) {
 // ════════════════════════════════════════════════════════
 function getCatType(v){return v.split('|')[1]||'100';}
 function getCatLabel(v){return v.split('|')[0];}
+
 function onCatChange() {
   const t=getCatType(document.getElementById('dCat').value);
   document.getElementById('pctDeductionGroup').style.display=t==='mixed'?'':'none';
@@ -1351,6 +1473,7 @@ function onCatChange() {
   }
   updateDepPreview();
 }
+
 function updateDepPreview() {
   const t=getCatType(document.getElementById('dCat').value);
   const total=parseFloat(document.getElementById('dAmount').value)||0;
@@ -1364,6 +1487,7 @@ function updateDepPreview() {
   document.getElementById('ddEco').textContent=`≈ $${eco.toFixed(2)} récupérés`;
   box.classList.add('visible');
 }
+
 async function saveDepense() {
   const date=v('dDate'),rawCat=document.getElementById('dCat').value;
   const catLabel=getCatLabel(rawCat),catType=getCatType(rawCat);
@@ -1381,6 +1505,7 @@ async function saveDepense() {
     renderDepenses();
   } catch(e){toast('❌ '+e.message,'error');}
 }
+
 function renderDepenses() {
   const y=document.getElementById('dAnnee').value;
   const exp=depenses.filter(e=>e.date&&e.date.startsWith(String(y))).sort((a,b)=>b.date.localeCompare(a.date));
@@ -1402,6 +1527,7 @@ function renderDepenses() {
   </table></div>
   <div class="alert alert-success" style="margin-top:12px">💰 <strong>Économie d'impôt estimée :</strong> ≈ $${(totDed*0.36).toFixed(0)} (TMI ~36%)</div>`;
 }
+
 async function deleteDepense(id) {
   if(!confirm('Supprimer cette dépense ?')) return;
   try {
@@ -1411,16 +1537,8 @@ async function deleteDepense(id) {
 }
 
 // ════════════════════════════════════════════════════════
-//  RÉSUMÉ
+//  RÉSUMÉ & FISCAL
 // ════════════════════════════════════════════════════════
-// ════════════════════════════════════════════════════════════════
-//  CALCUL FISCAL OFFICIEL — Revenu Québec + CRA 2024
-//  Sources: TP-1 2024 (ligne 350=$18,056 × 14%), TP-80 2024
-//  5 composantes: Impôt QC + Fédéral + QPP(×2) + RQAP + FSS
-// ════════════════════════════════════════════════════════════════
-
-// Impôt QC 2024 — grille 401 TP-1
-// Crédit perso ligne 350: $18,056 × 14% = $2,527.84
 function calcImpotQC(r){
   if(r<=0) return 0;
   const B=[[53255,.14],[106495,.19],[129590,.24],[Infinity,.2575]];
@@ -1429,8 +1547,6 @@ function calcImpotQC(r){
   return Math.max(0,t-18056*.14);
 }
 
-// Impôt fédéral 2024 — T1 CRA
-// Crédit perso: $15,705 × 15% = $2,355.75
 function calcImpotFed(r){
   if(r<=0) return 0;
   const B=[[57375,.15],[114750,.205],[158519,.26],[220000,.29],[Infinity,.33]];
@@ -1439,8 +1555,6 @@ function calcImpotFed(r){
   return Math.max(0,t-15705*.15);
 }
 
-// QPP 2024 — Annexe U, TP-1 (ligne 445)
-// Travailleur autonome paie les 2 parts: 12.80% ≤$68,500 + QPP2 8% ≤$73,200
 function calcQPP(r){
   if(r<=3500) return 0;
   const t1=Math.max(0,Math.min(r,68500)-3500)*.1280;
@@ -1448,12 +1562,8 @@ function calcQPP(r){
   return t1+t2;
 }
 
-// RQAP 2024 — Annexe R, TP-1 (ligne 439)
-// Taux autonome: 0.878% sur max $94,000
 function calcRQAP(r){ return Math.min(r,94000)*.00878; }
 
-// FSS 2024 — Annexe F, TP-1 (ligne 446)
-// Fonds services santé — taux progressif pour travailleur autonome
 function calcFSS(r){
   if(r<=0) return 0;
   if(r<=14399) return r*.01;
@@ -1461,25 +1571,15 @@ function calcFSS(r){
   return 1481+(r-55400)*.0426;
 }
 
-// CALCUL COMPLET TP-1 2024 — retourne % à mettre de côté + détail
-// revenuNetClinique = sessions × $105 (après 30% clinique, TP-80 ligne 264)
-// depensesDeductibles = total dépenses TP-80 (OPQ, internet, assurance...)
 function calcFiscalComplet(revenuNetClinique, depensesDeductibles){
   if(revenuNetClinique<=0) return {pct:0,total:0,net:0,detail:{}};
   depensesDeductibles = depensesDeductibles||0;
 
-  // TP-80 ligne 264: revenu net d'entreprise
   const revEntreprise = Math.max(0, revenuNetClinique - depensesDeductibles);
-
-  // Cotisations sociales (calculées sur revenu d'entreprise)
   const qpp  = calcQPP(revEntreprise);
   const rqap = calcRQAP(revEntreprise);
   const fss  = calcFSS(revEntreprise);
-
-  // TP-1 ligne 248: déduction 50% QPP → réduit revenu imposable
   const revImp = Math.max(0, revEntreprise - qpp/2);
-
-  // Impôts sur le revenu imposable
   const fed = calcImpotFed(revImp);
   const qc  = calcImpotQC(revImp);
 
@@ -1493,7 +1593,6 @@ function calcFiscalComplet(revenuNetClinique, depensesDeductibles){
   };
 }
 
-// Compatibilité avec code existant
 function estimarImpuestos(r){ return calcImpotFed(r)+calcImpotQC(r); }
 function estimarCotizaciones(r){ return calcQPP(r)+calcRQAP(r)+calcFSS(r); }
 
@@ -1507,18 +1606,14 @@ function loadResume() {
   const expAnnee=depenses.filter(e=>e.date&&e.date.startsWith(String(y)));
   const totalDep=expAnnee.reduce((a,e)=>a+(e.amountDed||0),0);
 
-  // Même logique que Facture: projeter sur année complète si peu de mois enregistrés
-  // pour éviter un taux fiscal faussement bas (~5% avec 1 seul mois)
   const moisUniques=new Set(sessAnnee.map(s=>s.Mois)).size||1;
   const netMoisActuel=sessMois.reduce((a,s)=>a+Number(s.Net),0);
   const netProjette=netMoisActuel>0?netMoisActuel*12:netAnnuel*(12/moisUniques);
   const baseCalcFiscal=Math.max(netAnnuel,netProjette);
 
-  // Calcul officiel TP-1 2024 — 5 composantes
   const fiscal=calcFiscalComplet(baseCalcFiscal, totalDep);
   const tauxEff=baseCalcFiscal>0?fiscal.total/baseCalcFiscal:0.40;
 
-  // Affichage basé sur le net annuel RÉEL enregistré
   const taxesReelles=round2(netAnnuel*tauxEff);
   const revReel=netAnnuel-totalDep-taxesReelles;
 
@@ -1527,7 +1622,6 @@ function loadResume() {
   document.getElementById('stTaxes').textContent=taxesReelles>0?`-$${taxesReelles.toFixed(0)}`:'—';
   document.getElementById('stReal').textContent=revReel>0?`$${revReel.toFixed(0)}`:'—';
 
-  // Calcul de l'économie fiscale réelle des dépenses
   if(totalDep>0 && netAnnuel>0) {
     const fiscalSansDep = calcFiscalComplet(baseCalcFiscal, 0);
     const fiscalAvecDep = calcFiscalComplet(baseCalcFiscal, totalDep);
@@ -1559,7 +1653,7 @@ function loadResume() {
     document.getElementById('depEconomieCard').style.display='none';
   }
 
-  // ── RENDER CALENDAR VIEW ──
+  // ── CALENDAR VIEW CALL ──
   renderCalendar(m, y);
 
   const freq={};
@@ -1580,6 +1674,9 @@ function loadResume() {
   }).join('')||'<div class="empty" style="padding:28px 0"><div class="txt-sm">Aucune donnée ce mois</div></div>';
 }
 
+// ════════════════════════════════════════════════════════
+//  CALENDAR VIEW
+// ════════════════════════════════════════════════════════
 function renderCalendar(month, year) {
   const firstDay = new Date(year, month - 1, 1);
   const lastDay = new Date(year, month, 0);
@@ -1610,8 +1707,8 @@ function renderCalendar(month, year) {
     const daySessions = monthSessions.filter(s => normalizeDate(s.Date_Session) === dateStr);
     
     const hasSession = daySessions.length > 0;
-    const clients = daySessions.map(s => getConfidentialName(s));
-    const uniqueClients = [...new Set(clients)];
+    const clientsObj = daySessions.map(s => getConfidentialName(s));
+    const uniqueClients = [...new Set(clientsObj)];
     
     const weekNum = Math.ceil((day + startDay) / 7);
     const weekClass = weekNum === 1 ? '' : ' style="display:none"';
@@ -1651,7 +1748,6 @@ function renderCalendarStats(monthSessions) {
   const clientCount = {};
 
   monthSessions.forEach(s => {
-    // Parseo local forzado (UTC bug)
     const [y, m, dNum] = normalizeDate(s.Date_Session).split('-');
     const date = new Date(y, m - 1, dNum);
     const dayName = JOURS[date.getDay() === 0 ? 6 : date.getDay() - 1];
@@ -1696,107 +1792,6 @@ function renderCalendarStats(monthSessions) {
 }
 
 // ════════════════════════════════════════════════════════
-//  UTILS
-// ════════════════════════════════════════════════════════
-
-// ════════════════════════════════════════════════════════
-//  EDIT & DELETE SESSION
-// ════════════════════════════════════════════════════════
-let editingSessionDate = null;
-let editingSessionIdx  = -1;
-
-function editSession(i) {
-  const selDate=document.getElementById('sDate').value||today;
-  const todaySess=sessions.filter(s=>normalizeDate(s.Date_Session)===selDate);
-  const s=todaySess[i];
-  if(!s) return;
-  editingSessionDate=selDate; editingSessionIdx=i;
-  document.getElementById('editDate').value=normalizeDate(s.Date_Session);
-  document.getElementById('editClientName').value=(s.Prénom||'')+' '+(s.Nom||'');
-  document.getElementById('editTarif').value=s.Tarif;
-  document.getElementById('editNotes').value=s.Notes||'';
-  document.getElementById('editPctLbl').textContent=cfg.pct||30;
-  unselectEditTarifBtns();
-  const t=Number(s.Tarif);
-  if(t===120)document.getElementById('et120').classList.add('active');
-  else if(t===140)document.getElementById('et140').classList.add('active');
-  else if(t===150)document.getElementById('et150').classList.add('active');
-  else document.getElementById('etOther').classList.add('active');
-  updateEditPreview();
-  // Requiere contenedor HTML id="editSessionModal" definido
-  const modalEl = document.getElementById('editSessionModal');
-  if (modalEl) modalEl.classList.add('open');
-  else toast('⚠️ El modal de edición no existe en el DOM HTML', 'warning');
-}
-
-function setEditTarif(val){
-  unselectEditTarifBtns();
-  const map={120:'et120',140:'et140',150:'et150'};
-  if(map[val])document.getElementById(map[val]).classList.add('active');
-  else document.getElementById('etOther').classList.add('active');
-  if(val>0)document.getElementById('editTarif').value=val;
-  updateEditPreview();
-}
-
-function unselectEditTarifBtns(){
-  ['et120','et140','et150','etOther'].forEach(id=>{var el=document.getElementById(id);if(el)el.classList.remove('active');});
-}
-
-function updateEditPreview(){
-  const t=parseFloat(document.getElementById('editTarif').value)||0,p=cfg.pct||30;
-  if(!t){document.getElementById('editFrais').textContent='—';document.getElementById('editNet').textContent='—';return;}
-  document.getElementById('editFrais').textContent='-$'+round2(t*p/100).toFixed(2);
-  document.getElementById('editNet').textContent='$'+round2(t-round2(t*p/100)).toFixed(2);
-}
-
-async function saveEditSession(){
-  const newDate=document.getElementById('editDate').value;
-  const newTarif=parseFloat(document.getElementById('editTarif').value);
-  const newNotes=document.getElementById('editNotes').value.trim();
-  if(!newDate||!newTarif){toast('⚠️ Date et tarif requis','warning');return;}
-  const selDate=editingSessionDate;
-  const todaySess=sessions.filter(s=>normalizeDate(s.Date_Session)===selDate);
-  const s=todaySess[editingSessionIdx];
-  if(!s){toast('❌ Session introuvable','error');return;}
-  const mainIdx=sessions.findIndex(ms=>normalizeDate(ms.Date_Session)===selDate&&ms.Prénom===s.Prénom&&ms.Nom===s.Nom&&String(ms.Tarif)===String(s.Tarif));
-  if(mainIdx<0){toast('❌ Session introuvable','error');return;}
-  const p=cfg.pct||30,frais=round2(newTarif*p/100),net=round2(newTarif-frais);
-  const parts=newDate.split('-'),mois=MOIS[parseInt(parts[1])-1]+' '+parts[0];
-  const facture=String(parseInt(parts[1])).padStart(2,'0')+'-'+parts[0].slice(-2);
-  const updated={...sessions[mainIdx],Date_Session:newDate,Tarif:newTarif,Frais:frais,Net:net,Mois:mois,Facture:facture,Notes:newNotes};
-  const btn=document.querySelector('#editSessionModal .btn-primary');
-  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>';}
-  try{
-    if(isDemo||!cfg.scriptUrl){sessions[mainIdx]=updated;toast('✅ Session modifiée (démo)');}
-    else{
-      await callScript('deleteSession',{date:normalizeDate(s.Date_Session),prenom:s.Prénom,nom:s.Nom,tarif:String(s.Tarif)});
-      await callScript('addSession',updated);
-      sessions[mainIdx]=updated;
-      toast('✅ Session modifiée');
-    }
-    closeModal('editSessionModal');
-    loadTodaySessions();
-  }catch(e){toast('❌ '+e.message,'error');}
-  finally{if(btn){btn.disabled=false;btn.innerHTML='💾 Sauvegarder';}}
-}
-
-async function deleteSession(i){
-  const selDate=document.getElementById('sDate').value||today;
-  const todaySess=sessions.filter(s=>normalizeDate(s.Date_Session)===selDate);
-  const s=todaySess[i];
-  if(!s) return;
-  if(!confirm('Supprimer la session de '+(s.Prénom||'')+' '+(s.Nom||'')+' ($'+s.Tarif+') ?')) return;
-  const mainIdx=sessions.findIndex(ms=>normalizeDate(ms.Date_Session)===selDate&&ms.Prénom===s.Prénom&&ms.Nom===s.Nom&&String(ms.Tarif)===String(s.Tarif));
-  try{
-    if(!isDemo&&cfg.scriptUrl) await callScript('deleteSession',{date:normalizeDate(s.Date_Session),prenom:s.Prénom,nom:s.Nom,tarif:String(s.Tarif)});
-    if(mainIdx>=0) sessions.splice(mainIdx,1);
-    toast('🗑️ Session supprimée');
-    loadTodaySessions();
-  }catch(e){if(mainIdx>=0)sessions.splice(mainIdx,1);loadTodaySessions();toast('🗑️ Session supprimée');}
-}
-
-
-// ════════════════════════════════════════════════════════
 //  SIMULATEUR STRATÉGIQUE
 // ════════════════════════════════════════════════════════
 function setStratTarif(val) {
@@ -1806,6 +1801,7 @@ function setStratTarif(val) {
   document.getElementById('sPrix').value=val;
   simuler();
 }
+
 function unselectStratTarifBtns(){
   ['st120','st140','st150','st175'].forEach(id=>{var el=document.getElementById(id);if(el)el.classList.remove('active');});
 }
@@ -1821,15 +1817,12 @@ function onSessionsMoisInput() {
     return;
   }
 
-  // Calculer patients/semaine depuis sessions/mois
   const sessAn  = sessM * 12;
   const pacSem  = sessAn / sem;
 
-  // Mettre à jour le slider patients
   document.getElementById('sPatientsNum').value   = pacSem.toFixed(1);
   document.getElementById('sPatientsRange').value = Math.round(pacSem);
 
-  // Afficher info
   const netMois = sessM * prix * (1 - pctClin);
   document.getElementById('sSessionsMoisInfo').style.display = '';
   document.getElementById('sSessionsMoisInfo').innerHTML =
@@ -1847,14 +1840,13 @@ function simuler() {
 
   const brut    = prix * patients * semaines;
   const comis   = brut * pctClin;
-  const netClin = brut - comis;  // revenu net clinique ($105/session)
+  const netClin = brut - comis;
 
   const fiscal  = calcFiscalComplet(netClin, depAnnee);
   const poche   = fiscal.net;
   const heures  = patients * semaines;
   const parHeure = poche / heures;
 
-  // KPIs
   document.getElementById('skNetAn').textContent    = '$'+netClin.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
   const sessParMois = patients * semaines / 12;
   document.getElementById('skNetAnSub').textContent  = '$'+(netClin/12).toFixed(0)+'/mois · '+sessParMois.toFixed(0)+' sessions/mois';
@@ -1864,7 +1856,6 @@ function simuler() {
   document.getElementById('skPocheMois').textContent = '$'+(poche/12).toFixed(0)+'/mois · $'+(poche/semaines).toFixed(0)+'/sem';
   document.getElementById('skHeure').textContent    = '$'+parHeure.toFixed(2);
 
-  // Semanal / Mensual
   const fmt = n => '$'+n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
   const netSem   = netClin / semaines;
   const impSem   = fiscal.total / semaines;
@@ -1880,7 +1871,6 @@ function simuler() {
   document.getElementById('skMoisGuardar').textContent  = fmt(impMois);
   document.getElementById('skMoisDisp').textContent     = fmt(dispMois);
 
-  // Décomposition fiscale
   const d = fiscal.detail;
   const bars = [
     {label:'Impôt Québec (TP-1)',   val:d.qc,   color:'#dc2626'},
@@ -1906,23 +1896,17 @@ function simuler() {
     <span>$${fiscal.total.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',')} (${fiscal.pct.toFixed(1)}%)</span>
   </div>`;
 
-  // Lecture stratégique
   const msgs = [];
-
-  // Agenda optimale
-  if(patients < 15) msgs.push({icon:'📈', txt:'<b>Moins de 15 patients/sem :</b> marge de croissance importante. Chaque patient supplémentaire ajoute $'+(prix*(1-pctClin)*(1-fiscal.pct/100)*semaines/semaines).toFixed(0)+'/sem net.'});
+  if(patients < 15) msgs.push({icon:'📈', txt:'<b>Moins de 15 patients/sem :</b> marge de croissance importante. Chaque patient supplémentaire ajoute $'+(prix*(1-pctClin)*(1-fiscal.pct/100)*semaines).toFixed(0)+'/an net.'});
   else if(patients <= 20) msgs.push({icon:'✅', txt:'<b>Zone optimale (15-20 patients/sem) :</b> bon équilibre revenu / charge clinique.'});
   else msgs.push({icon:'⚠️', txt:'<b>Plus de 20 patients/sem :</b> attention à la fatigue de compassion. Le $/heure effectif tend à baisser après 20 patients.'});
 
-  // Impact tarif
   const diff5 = (prix+5)*(1-pctClin)*patients*semaines*(1-fiscal.pct/100) - poche;
   msgs.push({icon:'💡', txt:`<b>+$5 par session</b> = +$${diff5.toFixed(0)} dans votre poche par an.`});
 
-  // Dépenses
   if(depAnnee < 2000) msgs.push({icon:'🧾', txt:'<b>Dépenses déductibles faibles.</b> Pensez à déduire : OPQ ($'+Math.round(650).toLocaleString()+'), assurance resp., internet, formation.'});
   else msgs.push({icon:'🧾', txt:`<b>Dépenses déductibles :</b> $${depAnnee.toLocaleString()} → économie fiscale estimée $${(depAnnee*fiscal.pct/100).toFixed(0)}.`});
 
-  // Vacances
   const diffVac = (50-semaines);
   if(diffVac>0) msgs.push({icon:'🏖️', txt:`<b>${diffVac} semaines de vacances/an</b> → coût net : $${(diffVac*(prix*(1-pctClin))*(1-fiscal.pct/100)*patients).toFixed(0)}.`});
 
@@ -1933,6 +1917,9 @@ function simuler() {
   ).join('');
 }
 
+// ════════════════════════════════════════════════════════
+//  UTILS GLOBAL
+// ════════════════════════════════════════════════════════
 function showTab(tab) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -1944,9 +1931,11 @@ function showTab(tab) {
   if(tab==='resume') loadResume();
   if(tab==='strategie') simuler();
 }
+
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function v(id){return document.getElementById(id).value.trim();}
 function round2(n){return Math.round(n*100)/100;}
+
 function normalizeDate(d){
   if(!d) return '';
   var s=String(d).trim();
@@ -1957,6 +1946,7 @@ function normalizeDate(d){
   if(m){var mo={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};return m[3]+'-'+(mo[m[1]]||'01')+'-'+m[2].padStart(2,'0');}
   return s;
 }
+
 function fmtDate(d){
   if(!d) return '—';
   var s=String(d).trim();
@@ -1967,8 +1957,9 @@ function fmtDate(d){
   if(m){var mo={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};return m[2].padStart(2,'0')+'-'+(mo[m[1].substring(0,3)]||'01')+'-'+m[3];}
   return s;
 }
+
 document.querySelectorAll('.mbg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');}));
-let toastTimer;
+
 function toast(msg,type='success'){
   const el=document.getElementById('toast');
   el.textContent=msg;

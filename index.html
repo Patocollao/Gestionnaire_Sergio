@@ -408,7 +408,7 @@ tbody td { padding: 11px 15px; }
             <option value="Bureau à domicile — Électricité|mixed">⚡ Électricité / Hydro-Québec</option>
           </optgroup>
           <optgroup label="─ Déplacements & Repas ─">
-            <option value="Frais de représentation (Repas)|50">🍽️ Repas d'affaires (50% max)</option>
+            <option value="Frais de representación (Repas)|50">🍽️ Repas d'affaires (50% max)</option>
             <option value="Frais de véhicule|mixed">🚗 Frais de véhicule (usage mixte)</option>
           </optgroup>
           <optgroup label="─ Autre ─">
@@ -529,12 +529,12 @@ tbody td { padding: 11px 15px; }
       </table>
     </div>
     <h4>Pourquoi 40% fixe et non le taux calculé dynamiquement ?</h4>
-    <p>Nous avons testé le calcul dynamique mais il posait un problema important : avec seulement 1 ou 2 mois enregistrés, le revenu annuel projeté es faible et le taux fiscal calculé tombe à <strong>5–10%</strong> — ce qui est dangereux car il suggère de mettre trop peu de côté.</p>
+    <p>Nous avons testé le calcul dynamique mais il posait un problema important : avec seulement 1 ou 2 mois enregistrés, le revenu annuel projeté est faible et le taux fiscal calculé tombe à <strong>5–10%</strong> — ce qui est dangereux car il suggère de mettre trop peu de côté.</p>
     <p>Le <strong>40% fixe</strong> es le choix le plus prudent car :</p>
     <ul>
       <li>Il couvre le scénario de 20 patients/sem (taux réel exactamente 40.0%)</li>
       <li>Pour 16–18 patients il est légèrement conservateur (38.9–39.6%) — vous mettrez un peu plus de côté, ce qui est préférable à pas assez</li>
-      <li>Il es stable et prévisible — la même règle chaque mois</li>
+      <li>Il est stable et prévisible — la même règle chaque mois</li>
       <li>Les dépenses déductibles (TP-80) réduisent le taux réel en dessous de 40%, créant un coussin de sécurité</li>
     </ul>
     <div class="alert alert-success">✅ <strong>Règle pratique :</strong> Sur chaque paiement reçu de la clinique ($105/session), mettez <strong>$42</strong> de côté pour les impôts et cotisations. Le reste ($63) est réellement disponible.</div>
@@ -1700,30 +1700,33 @@ function loadResume() {
   const netMoisReel = sessMois.reduce((a,s)=>a+Number(s.Net),0);
   const impuestoMoisProporcional = netMoisReel * tauxEff;
   const disponibleMoisReal = netMoisReel - impuestoMoisProporcional;
+  
   const tasaHorariaEfectiva = totalSessionsMois > 0 ? (disponibleMoisReal / totalSessionsMois) : 0;
+  const costoOperativoEstimadoMes = 250; 
+  const sesionesPuntoEquilibrio = Math.ceil(costoOperativoEstimadoMes / 105);
+  const porcentajePuntoEquilibrio = totalSessionsMois > 0 ? Math.min(100, Math.round((totalSessionsMois / sesionesPuntoEquilibrio) * 100)) : 0;
 
   const clientStats = {};
   sessMois.forEach(s => {
-    const name = `${s.Prénom||''} ${s.Nom||s.Client||''}`.trim();
-    if(!clientStats[name]) clientStats[name] = { count: 0, lastDate: s.Date_Session };
+    const name = `${s.Prénom || ''} ${s.Nom || s.Client || ''}`.trim();
+    if (!clientStats[name]) clientStats[name] = { count: 0, lastDate: s.Date_Session };
     clientStats[name].count++;
-    if(s.Date_Session > clientStats[name].lastDate) clientStats[name].lastDate = s.Date_Session;
+    if (s.Date_Session > clientStats[name].lastDate) clientStats[name].lastDate = s.Date_Session;
   });
-  
-  const sortedClients = Object.entries(clientStats).sort((a,b)=>b[1].count - a[1].count).slice(0,5);
+  const sortedClients = Object.entries(clientStats).sort((a, b) => b[1].count - a[1].count).slice(0, 5);
   
   document.getElementById('topClients').innerHTML = sortedClients.length
-    ? sortedClients.map(([name, data], i)=>{
+    ? sortedClients.map(([name, data], i) => {
         const pctCliente = Math.round((data.count / totalSessionsMois) * 100);
         return `<div style="margin-bottom:12px">
-          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:4px">
             <span class="flex aic gap8">
               <span style="width:20px;height:20px;background:var(--accent-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent)">${i+1}</span>
               <span>${name}</span>
             </span>
-            <span style="text-align:right; line-height:1.2">
-              <strong>${data.count}</strong> sess.<br>
-              <span style="font-size:10px;color:var(--text3)">Dernière: ${fmtDate(data.lastDate)}</span>
+            <span style="text-align:right">
+              <strong>${data.count}</strong> sess. (${pctCliente}%)<br>
+              <span style="font-size:11px;color:var(--text3)">Dernière: ${fmtDate(data.lastDate)}</span>
             </span>
           </div>
           <div style="background:var(--border);border-radius:99px;height:5px">
@@ -1733,103 +1736,39 @@ function loadResume() {
       }).join('')
     : '<div class="empty" style="padding:28px 0"><div class="txt-sm">Aucune donnée ce mois</div></div>';
 
-  const tarifs={};
-  sessMois.forEach(s=>{tarifs[`$${s.Tarif}`]=(tarifs[`$${s.Tarif}`]||0)+1;});
-  
-  let tarifasHTML = Object.entries(tarifs).sort().map(([t,c])=>{
-    const pct2=Math.round(c/sessMois.length*100);
-    return `<div style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px">
-        <span>Tarif ${t} (Brut)</span>
-        <span><strong>${c}</strong> sess. (${pct2}%)</span>
-      </div>
-      <div style="background:var(--border);border-radius:99px;height:6px">
-        <div style="background:var(--accent);border-radius:99px;height:6px;width:${pct2}%;"></div>
-      </div>
-    </div>`;
-  }).join('');
-
-  const uniqueClientsMois = new Set(sessMois.map(s => `${s.Prénom||''} ${s.Nom||s.Client||''}`.trim())).size;
-  const absMois = sessMois.filter(s => s.Notes && s.Notes.toLowerCase().includes('absence')).length;
-  const presencesMois = totalSessionsMois - absMois;
-
+  // ── ACTIVIDAD MENSUAL (Evolución ± 3 meses) ──
   const trendData = [];
-  for(let i = -2; i <= 2; i++) {
-     let d = new Date(y, m - 1 + i, 1);
-     let tm = d.getMonth() + 1;
-     let ty = d.getFullYear();
-     let tMoisStr = `${MOIS[tm-1]} ${ty}`;
-     let tSess = sessions.filter(s => s.Mois === tMoisStr);
-     
-     if(tSess.length > 0 || i === 0) { 
-        let tAbs = tSess.filter(s => s.Notes && s.Notes.toLowerCase().includes('absence')).length;
-        let tUniq = new Set(tSess.map(s => `${s.Prénom||''} ${s.Nom||s.Client||''}`.trim())).size;
-        trendData.push({ 
-          label: (i===0 ? `<strong>${MOIS[tm-1].substring(0,3)}. ${ty}</strong>` : `${MOIS[tm-1].substring(0,3)}. ${ty}`), 
-          total: tSess.length, 
-          abs: tAbs, 
-          uniq: tUniq, 
-          isCurrent: i===0 
-        });
-     }
+  for (let i = -3; i <= 3; i++) {
+    let d = new Date(y, m - 1 + i, 1);
+    let mesKey = `${MOIS[d.getMonth()]} ${d.getFullYear()}`;
+    let tSess = sessions.filter(s => s.Mois === mesKey);
+    let tAbs = tSess.filter(s => s.Notes && s.Notes.toLowerCase().includes('absence')).length;
+    trendData.push({
+      label: `${MOIS[d.getMonth()].substring(0, 3)} ${d.getFullYear()}`,
+      total: tSess.length,
+      abs: tAbs,
+      isCurrent: (i === 0)
+    });
   }
 
-  let trendHTML = trendData.map(td => `
-    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding:7px 0;border-bottom:1px solid var(--border);${td.isCurrent?'background:var(--surface2);font-weight:600;padding:7px 8px;border-radius:4px;border:none':''}">
-      <span style="width:75px">${td.label}</span>
-      <span style="flex:1;text-align:center;color:var(--text2)">${td.uniq} clients</span>
-      <span style="flex:1;text-align:right">
-        ${td.total} sess. 
-        ${td.abs > 0 ? `<span style="color:var(--danger);font-size:11px;margin-left:4px" title="Absences facturées">(${td.abs} abs)</span>` : ''}
-      </span>
-    </div>
-  `).join('');
-
   document.getElementById('tarifBreak').innerHTML = `
-    <div style="margin-bottom: 20px;">
-      ${tarifasHTML || '<div class="txt-sm txt-muted">Aucune session ce mois</div>'}
-    </div>
-    
-    <div style="border-top: 1px solid var(--border); padding-top:16px;">
-      <div style="font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom:14px;">Activité et Absences</div>
-      
-      <div style="margin-bottom:20px">
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px">
-          <span>Clients uniques (Ce mois)</span>
-          <span><strong>${uniqueClientsMois}</strong> clients</span>
+    <div style="font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; margin-bottom:12px;">Activité et Absences</div>
+    ${trendData.map(t => {
+      const pctAbs = t.total > 0 ? (t.abs / t.total) * 100 : 0;
+      const pctPres = t.total > 0 ? ((t.total - t.abs) / t.total) * 100 : 100;
+      return `
+        <div style="margin-bottom:14px; ${t.isCurrent ? 'background:var(--surface2); padding:8px; border-radius:6px; border:1px solid var(--accent-light)' : ''}">
+          <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:2px">
+            <span style="font-weight:${t.isCurrent ? '700' : '500'}">${t.label}</span>
+            <span style="color:var(--text2)">${t.total} sess. ${t.abs > 0 ? `<span style="color:var(--danger); font-weight:700">(${t.abs} abs)</span>` : ''}</span>
+          </div>
+          <div style="display:flex; height:6px; border-radius:99px; overflow:hidden; background:var(--border)">
+            <div style="background:var(--accent2); width:${pctPres}%" title="Présences"></div>
+            <div style="background:var(--danger); width:${pctAbs}%" title="Absences"></div>
+          </div>
         </div>
-        <div style="background:var(--border);border-radius:99px;height:6px;margin-bottom:14px">
-          <div style="background:var(--accent);border-radius:99px;height:6px;width:100%;"></div>
-        </div>
-        
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px">
-          <span>Total des séances facturées</span>
-          <span><strong>${totalSessionsMois}</strong> sess.</span>
-        </div>
-        <div style="display:flex; height:6px; border-radius:99px; overflow:hidden; background:var(--border);">
-           <div style="background:var(--accent2); width:${totalSessionsMois ? (presencesMois/totalSessionsMois)*100 : 0}%" title="Présences"></div>
-           <div style="background:var(--danger); width:${totalSessionsMois ? (absMois/totalSessionsMois)*100 : 0}%" title="Absences"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:4px">
-          <span>${presencesMois} présences</span>
-          ${absMois > 0 ? `<span style="color:var(--danger);font-weight:600">${absMois} absence(s) facturée(s)</span>` : '<span>0 absence</span>'}
-        </div>
-      </div>
-
-      <div style="font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom:8px;">Évolution (± 2 mois)</div>
-      <div style="margin-bottom:20px">
-        ${trendHTML}
-      </div>
-
-      <div style="font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom:12px;">Efficience Financière</div>
-      <div class="flex jsb aic" style="background: var(--surface2); padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border)">
-        <div>
-          <div style="font-size: 12px; font-weight:600; color: var(--text)">Valeur nette par heure</div>
-          <div style="font-size: 11px; color: var(--text3)">Après frais clinique & impôts</div>
-        </div>
-        <div style="font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--accent)">$${tasaHorariaEfectiva.toFixed(2)}/h</div>
-      </div>
-    </div>
+      `;
+    }).join('')}
   `;
 }
 
@@ -1895,6 +1834,59 @@ function showWeek(weekNum) {
     const dayWeek = parseInt(day.getAttribute('data-week'));
     day.style.display = dayWeek === weekNum ? '' : 'none';
   });
+}
+
+function renderCalendarStats(monthSessions) {
+  if (monthSessions.length === 0) {
+    document.getElementById('calStats').innerHTML = '<div class="empty" style="padding:20px 0;grid-column:1/-1"><div class="txt-sm">Aucune session ce mois</div></div>';
+    return;
+  }
+
+  const dayCount = {};
+  const clientCount = {};
+
+  monthSessions.forEach(s => {
+    const [y, m, dNum] = normalizeDate(s.Date_Session).split('-');
+    const date = new Date(y, m - 1, dNum);
+    const dayName = JOURS[date.getDay() === 0 ? 6 : date.getDay() - 1];
+    dayCount[dayName] = (dayCount[dayName] || 0) + 1;
+
+    const name = getConfidentialName(s);
+    clientCount[name] = (clientCount[name] || 0) + 1;
+  });
+
+  const busiestDay = Object.entries(dayCount).sort((a, b) => b[1] - a[1])[0];
+  const topClient = Object.entries(clientCount).sort((a, b) => b[1] - a[1])[0];
+
+  const weekSessions = {};
+  monthSessions.forEach(s => {
+    const [y, m, dNum] = normalizeDate(s.Date_Session).split('-');
+    const date = new Date(y, m - 1, dNum);
+    const day = date.getDate();
+    const startDayOfWeek = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+    const startDay = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
+    const weekNum = Math.ceil((day + startDay) / 7);
+    weekSessions[weekNum] = (weekSessions[weekNum] || 0) + 1;
+  });
+  const topWeek = Object.entries(weekSessions).sort((a, b) => b[1] - a[1])[0];
+
+  document.getElementById('calStats').innerHTML = `
+    <div class="cal-stat-item">
+      <div class="cal-stat-label">Jour le plus chargé</div>
+      <div class="cal-stat-value">${busiestDay[1]}</div>
+      <div class="txt-xs txt-muted">${busiestDay[0]} · ${busiestDay[1]} sessions</div>
+    </div>
+    <div class="cal-stat-item">
+      <div class="cal-stat-label">Client le plus fréquent</div>
+      <div class="cal-stat-value">${topClient[1]}</div>
+      <div class="txt-xs txt-muted">${topClient[0]}</div>
+    </div>
+    <div class="cal-stat-item">
+      <div class="cal-stat-label">Semaine la plus productive</div>
+      <div class="cal-stat-value">Sem ${topWeek[0]}</div>
+      <div class="txt-xs txt-muted">${topWeek[1]} sessions</div>
+    </div>
+  `;
 }
 
 // ════════════════════════════════════════════════════════

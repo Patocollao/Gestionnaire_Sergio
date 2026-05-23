@@ -1706,20 +1706,37 @@ function loadResume() {
   const sesionesPuntoEquilibrio = Math.ceil(costoOperativoEstimadoMes / 105);
   const porcentajePuntoEquilibrio = totalSessionsMois > 0 ? Math.min(100, Math.round((totalSessionsMois / sesionesPuntoEquilibrio) * 100)) : 0;
 
-  const freq={};
-  sessMois.forEach(s=>{const k=`${s.Prénom||''} ${s.Nom||s.Client||''}`.trim();freq[k]=(freq[k]||0)+1;});
-  const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5);
+// ── 1. CÁLCULO BASE DE EFICIENCIA ──
+  const totalSessionsMois = sessMois.length;
+  const netMoisReel = sessMois.reduce((a,s)=>a+Number(s.Net),0);
+  const impuestoMoisProporcional = netMoisReel * tauxEff;
+  const disponibleMoisReal = netMoisReel - impuestoMoisProporcional;
+  const tasaHorariaEfectiva = totalSessionsMois > 0 ? (disponibleMoisReal / totalSessionsMois) : 0;
+
+  // ── 2. CLIENTES FRECUENTES (Con fecha de última sesión) ──
+  const clientStats = {};
+  sessMois.forEach(s => {
+    const name = `${s.Prénom||''} ${s.Nom||s.Client||''}`.trim();
+    if(!clientStats[name]) clientStats[name] = { count: 0, lastDate: s.Date_Session };
+    clientStats[name].count++;
+    if(s.Date_Session > clientStats[name].lastDate) clientStats[name].lastDate = s.Date_Session;
+  });
   
-  document.getElementById('topClients').innerHTML = sorted.length
-    ? sorted.map(([name,count],i)=>{
-        const pctCliente = Math.round((count / totalSessionsMois) * 100);
+  const sortedClients = Object.entries(clientStats).sort((a,b)=>b[1].count - a[1].count).slice(0,5);
+  
+  document.getElementById('topClients').innerHTML = sortedClients.length
+    ? sortedClients.map(([name, data], i)=>{
+        const pctCliente = Math.round((data.count / totalSessionsMois) * 100);
         return `<div style="margin-bottom:12px">
           <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
             <span class="flex aic gap8">
               <span style="width:20px;height:20px;background:var(--accent-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent)">${i+1}</span>
               <span>${name}</span>
             </span>
-            <span><strong>${count}</strong> sess. (${pctCliente}%)</span>
+            <span style="text-align:right; line-height:1.2">
+              <strong>${data.count}</strong> sess.<br>
+              <span style="font-size:10px;color:var(--text3)">Dernière: ${fmtDate(data.lastDate)}</span>
+            </span>
           </div>
           <div style="background:var(--border);border-radius:99px;height:5px">
             <div style="background:var(--accent2);border-radius:99px;height:5px;width:${pctCliente}%"></div>
@@ -1728,6 +1745,7 @@ function loadResume() {
       }).join('')
     : '<div class="empty" style="padding:28px 0"><div class="txt-sm">Aucune donnée ce mois</div></div>';
 
+  // ── 3. REPARTICIÓN DE TARIFAS ──
   const tarifs={};
   sessMois.forEach(s=>{tarifs[`$${s.Tarif}`]=(tarifs[`$${s.Tarif}`]||0)+1;});
   
@@ -1744,28 +1762,87 @@ function loadResume() {
     </div>`;
   }).join('');
 
+  // ── 4. ACTIVIDAD MENSUAL, AUSENCIAS Y EVOLUCIÓN HISTÓRICA ──
+  const uniqueClientsMois = new Set(sessMois.map(s => `${s.Prénom||''} ${s.Nom||s.Client||''}`.trim())).size;
+  const absMois = sessMois.filter(s => s.Notes && s.Notes.toLowerCase().includes('absence')).length;
+  const presencesMois = totalSessionsMois - absMois;
+
+  // Construir historial de ± 2 meses
+  const trendData = [];
+  for(let i = -2; i <= 2; i++) {
+     let d = new Date(y, m - 1 + i, 1);
+     let tm = d.getMonth() + 1;
+     let ty = d.getFullYear();
+     let tMoisStr = `${MOIS[tm-1]} ${ty}`;
+     let tSess = sessions.filter(s => s.Mois === tMoisStr);
+     
+     if(tSess.length > 0 || i === 0) { 
+        let tAbs = tSess.filter(s => s.Notes && s.Notes.toLowerCase().includes('absence')).length;
+        let tUniq = new Set(tSess.map(s => `${s.Prénom||''} ${s.Nom||s.Client||''}`.trim())).size;
+        trendData.push({ 
+          label: (i===0 ? `<strong>${MOIS[tm-1].substring(0,3)}. ${ty}</strong>` : `${MOIS[tm-1].substring(0,3)}. ${ty}`), 
+          total: tSess.length, 
+          abs: tAbs, 
+          uniq: tUniq, 
+          isCurrent: i===0 
+        });
+     }
+  }
+
+  let trendHTML = trendData.map(td => `
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding:7px 0;border-bottom:1px solid var(--border);${td.isCurrent?'background:var(--surface2);font-weight:600;padding:7px 8px;border-radius:4px;border:none':''}">
+      <span style="width:75px">${td.label}</span>
+      <span style="flex:1;text-align:center;color:var(--text2)">${td.uniq} clients</span>
+      <span style="flex:1;text-align:right">
+        ${td.total} sess. 
+        ${td.abs > 0 ? `<span style="color:var(--danger);font-size:11px;margin-left:4px" title="Absences facturées">(${td.abs} abs)</span>` : ''}
+      </span>
+    </div>
+  `).join('');
+
   document.getElementById('tarifBreak').innerHTML = `
     <div style="margin-bottom: 20px;">
       ${tarifasHTML || '<div class="txt-sm txt-muted">Aucune session ce mois</div>'}
     </div>
+    
     <div style="border-top: 1px solid var(--border); padding-top:16px;">
-      <div style="font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom:12px;">Métriques d'Efficience Clinique</div>
-      <div class="flex jsb aic mb16" style="background: var(--surface2); padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border)">
+      <div style="font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom:14px;">Activité et Absences</div>
+      
+      <div style="margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px">
+          <span>Clients uniques (Ce mois)</span>
+          <span><strong>${uniqueClientsMois}</strong> clients</span>
+        </div>
+        <div style="background:var(--border);border-radius:99px;height:6px;margin-bottom:14px">
+          <div style="background:var(--accent);border-radius:99px;height:6px;width:100%;"></div>
+        </div>
+        
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px">
+          <span>Total des séances facturées</span>
+          <span><strong>${totalSessionsMois}</strong> sess.</span>
+        </div>
+        <div style="display:flex; height:6px; border-radius:99px; overflow:hidden; background:var(--border);">
+           <div style="background:var(--accent2); width:${totalSessionsMois ? (presencesMois/totalSessionsMois)*100 : 0}%" title="Présences"></div>
+           <div style="background:var(--danger); width:${totalSessionsMois ? (absMois/totalSessionsMois)*100 : 0}%" title="Absences"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:4px">
+          <span>${presencesMois} présences</span>
+          ${absMois > 0 ? `<span style="color:var(--danger);font-weight:600">${absMois} absence(s) facturée(s)</span>` : '<span>0 absence</span>'}
+        </div>
+      </div>
+
+      <div style="font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom:8px;">Évolution (± 2 mois)</div>
+      <div style="margin-bottom:20px">
+        ${trendHTML}
+      </div>
+
+      <div style="font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom:12px;">Efficience Financière</div>
+      <div class="flex jsb aic" style="background: var(--surface2); padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border)">
         <div>
           <div style="font-size: 12px; font-weight:600; color: var(--text)">Valeur nette par heure</div>
           <div style="font-size: 11px; color: var(--text3)">Après frais clinique & impôts</div>
         </div>
         <div style="font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--accent)">$${tasaHorariaEfectiva.toFixed(2)}/h</div>
-      </div>
-      <div>
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
-          <span style="font-weight:600">Seuil de Rentabilité Fijo ($250/mois)</span>
-          <span>${totalSessionsMois}/${sesionesPuntoEquilibrio} sess.</span>
-        </div>
-        <div style="background:var(--border);border-radius:99px;height:8px; margin-bottom:4px;">
-          <div style="background:${porcentajePuntoEquilibrio >= 100 ? 'var(--accent)' : 'var(--warning)'};border-radius:99px;height:8px;width:${porcentajePuntoEquilibrio}%; transition: width 0.4s;"></div>
-        </div>
-        <div style="font-size:11px; color: var(--text3)">${porcentajePuntoEquilibrio >= 100 ? '✅ Coûts fixes mensuels couverts' : '⏳ En progression pour couvrir les frais'}</div>
       </div>
     </div>
   `;

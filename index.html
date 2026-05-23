@@ -214,7 +214,7 @@ tbody td { padding: 11px 15px; }
 <body>
 
 <div class="header">
- <div class="brand">
+  <div class="brand">
     <div class="brand-icon" style="font-family: 'DM Serif Display', serif; font-size: 16px; letter-spacing: 0.5px;">SAU</div>
     <div>
       <div class="brand-name">Sergio Aguirre Urrutia</div>
@@ -302,6 +302,11 @@ tbody td { padding: 11px 15px; }
       <div class="fg">
         <label class="fl">Notes (optionnel)</label>
         <input type="text" class="fc" id="sNotes" placeholder="Ex: Suivi, Évaluation initiale...">
+      </div>
+
+      <div class="fg" style="display:flex;align-items:center;gap:8px;margin-bottom:20px;">
+        <input type="checkbox" id="sAbsence" style="width:16px;height:16px;accent-color:var(--accent)" onchange="if(this.checked && !document.getElementById('sNotes').value){document.getElementById('sNotes').value='Absence — Séance facturée'}">
+        <label for="sAbsence" style="font-size:13px;font-weight:600;color:var(--text2);cursor:pointer">Absence non motivée (Séance facturée)</label>
       </div>
 
       <button class="btn btn-primary btn-full" id="saveSessBtn" onclick="saveSession()">💾 Enregistrer la session</button>
@@ -403,7 +408,7 @@ tbody td { padding: 11px 15px; }
             <option value="Bureau à domicile — Électricité|mixed">⚡ Électricité / Hydro-Québec</option>
           </optgroup>
           <optgroup label="─ Déplacements & Repas ─">
-            <option value="Frais de représentation (Repas)|50">🍽️ Repas d'affaires (50% max)</option>
+            <option value="Frais de representación (Repas)|50">🍽️ Repas d'affaires (50% max)</option>
             <option value="Frais de véhicule|mixed">🚗 Frais de véhicule (usage mixte)</option>
           </optgroup>
           <optgroup label="─ Autre ─">
@@ -500,12 +505,11 @@ tbody td { padding: 11px 15px; }
 </div>
 
 <div class="page" id="page-aide">
-
   <div class="card aide-sec mb20">
     <h3>🏦 Pourquoi 40% — La règle de provision fiscale</h3>
     <p>La facture mensuelle affiche toujours <strong>40% à mettre de côté</strong>. Voici pourquoi ce chiffre a été choisi et comment il a été calculé.</p>
     <h4>Base de calcul — Formulaires officiels TP-1 2024</h4>
-    <p>Le taux de 40% est basé sur le calcul officiel de <strong>5 composantes</strong> selon les formulaires Revenu Québec et CRA :</p>
+    <p>Le taux de 40% es basado sur le calcul officiel de <strong>5 composantes</strong> selon les formulaires Revenu Québec et CRA :</p>
     <ul>
       <li><strong>Impôt provincial QC</strong> — Grille 401, TP-1 2024. Tramos : 14% ≤$53,255 · 19% ≤$106,495 · 24% ≤$129,590 · 25.75% au-delà. Crédit personnel de base : $18,056 × 14% = $2,528 (ligne 350).</li>
       <li><strong>Impôt fédéral</strong> — T1 CRA 2024. Tramos : 15% ≤$57,375 · 20.5% ≤$114,750 · 26% ≤$158,519. Crédit personnel : $15,705 × 15% = $2,356.</li>
@@ -526,9 +530,9 @@ tbody td { padding: 11px 15px; }
     </div>
     <h4>Pourquoi 40% fixe et non le taux calculé dynamiquement ?</h4>
     <p>Nous avons testé le calcul dynamique mais il posait un problema important : avec seulement 1 ou 2 mois enregistrés, le revenu annuel projeté est faible et le taux fiscal calculé tombe à <strong>5–10%</strong> — ce qui est dangereux car il suggère de mettre trop peu de côté.</p>
-    <p>Le <strong>40% fixe</strong> est le choix le plus prudent car :</p>
+    <p>Le <strong>40% fixe</strong> es le choix le plus prudent car :</p>
     <ul>
-      <li>Il couvre le scénario de 20 patients/sem (taux réel exactement 40.0%)</li>
+      <li>Il couvre le scénario de 20 patients/sem (taux réel exactamente 40.0%)</li>
       <li>Pour 16–18 patients il est légèrement conservateur (38.9–39.6%) — vous mettrez un peu plus de côté, ce qui est préférable à pas assez</li>
       <li>Il est stable et prévisible — la même règle chaque mois</li>
       <li>Les dépenses déductibles (TP-80) réduisent le taux réel en dessous de 40%, créant un coussin de sécurité</li>
@@ -582,7 +586,7 @@ tbody td { padding: 11px 15px; }
   <div class="g2" style="align-items:start">
     <div class="card">
       <div class="card-title">Paramètres</div>
-      <div class="card-sub">Ajustez les valeurs pour simuler votre situation</div>
+      <div class="card-sub">Ajustez les valores pour simuler votre situation</div>
 
       <div class="fg">
         <label class="fl">Prix par session ($)</label>
@@ -1125,6 +1129,7 @@ async function saveSession() {
       toast(`✅ Session enregistrée — ${selectedClient.Prénom} ${selectedClient.Nom}`);
     }
     document.getElementById('sNotes').value='';
+    if(document.getElementById('sAbsence')) document.getElementById('sAbsence').checked = false;
     clearClientSelection();
     loadTodaySessions();
   } catch(e){ toast('❌ '+e.message,'error'); }
@@ -1271,10 +1276,7 @@ function loadFacture() {
   const y=parseInt(document.getElementById('fAnnee').value);
   const moisStr=`${MOIS[m-1]} ${y}`;
   
-  // Ordenamiento cronológico explícito
   const sess=sessions.filter(s=>s.Mois===moisStr).sort((a,b)=>normalizeDate(a.Date_Session).localeCompare(normalizeDate(b.Date_Session)));
-
-  // Lógica fiscal base: 40%
   const tauxEff = 0.40;
 
   const numF=`${String(m).padStart(2,'0')}-${String(y).slice(-2)}`;
@@ -1290,7 +1292,6 @@ function loadFacture() {
   const totN=sess.reduce((a,s)=>a+Number(s.Net),0);
   const aMettreDecote = round2(totN * tauxEff);
   const netPoche      = round2(totN - aMettreDecote);
-  const pctAffiche    = (tauxEff*100).toFixed(1);
   
   document.getElementById('invStats').innerHTML=`
     <div>${sess.length} session(s)</div>
@@ -1304,24 +1305,59 @@ function loadFacture() {
   if(!sess.length){document.getElementById('factureContent').innerHTML=`<div class="empty"><div class="empty-ico">📂</div><div class="empty-title">Aucune session pour ${moisStr}</div></div>`;return;}
 
   const pctDisp='40.0';
-  document.getElementById('factureContent').innerHTML=`<div class="tw"><table>
-    <thead><tr><th>Date</th><th>Client (Loi 25)</th><th>Tarif</th><th>Frais (${cfg.pct||30}%)</th><th>Net</th><th>🏦 À garder (≈${pctDisp}%)</th></tr></thead>
-    <tbody>${sess.map(s=>`<tr>
-      <td>${fmtDate(s.Date_Session)}</td>
-      <td><strong>${getConfidentialName(s)}</strong></td>
-      <td>$${Number(s.Tarif).toFixed(2)}</td>
-      <td class="c-red">-$${Number(s.Frais).toFixed(2)}</td>
-      <td class="c-green fw6">$${Number(s.Net).toFixed(2)}</td>
-      <td style="color:var(--warning);background:#fffbeb">-$${(Number(s.Net)*tauxEff).toFixed(2)}</td>
-    </tr>`).join('')}</tbody>
-    <tfoot><tr>
-      <td class="tfoot" colspan="2">TOTAL — ${sess.length} sessions</td>
-      <td class="tfoot">$${totT.toFixed(2)}</td>
-      <td class="tfoot c-red">-$${totF.toFixed(2)}</td>
-      <td class="tfoot c-green">$${totN.toFixed(2)}</td>
-      <td class="tfoot" style="color:var(--warning)">-$${(totN*tauxEff).toFixed(2)}</td>
-    </tr></tfoot>
-  </table></div>`;
+  document.getElementById('factureContent').innerHTML=`
+    <div class="tw">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Client (Loi 25)</th>
+            <th>Tarif Brut</th>
+            <th>Frais Clinique (${cfg.pct||30}%)</th>
+            <th>Net Versé</th>
+            <th>🏦 Provision Impôt (${pctDisp}%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sess.map(s=>`<tr>
+            <td>${fmtDate(s.Date_Session)}</td>
+            <td>
+              <strong>${getConfidentialName(s)}</strong>
+              ${s.Notes ? `<br><span style="font-size:11px;color:#777;font-weight:normal;">📝 ${s.Notes}</span>` : ''}
+            </td>
+            <td>$${Number(s.Tarif).toFixed(2)}</td>
+            <td class="c-red">-$${Number(s.Frais).toFixed(2)}</td>
+            <td class="c-green fw6">$${Number(s.Net).toFixed(2)}</td>
+            <td style="color:var(--warning);background:#fffbeb;font-weight:600">-$${(Number(s.Net)*tauxEff).toFixed(2)}</td>
+          </tr>`).join('')}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td class="tfoot" colspan="2">TOTAL — ${sess.length} sessions</td>
+            <td class="tfoot">$${totT.toFixed(2)}</td>
+            <td class="tfoot c-red">-$${totF.toFixed(2)}</td>
+            <td class="tfoot c-green">$${totN.toFixed(2)}</td>
+            <td class="tfoot" style="color:var(--warning);background:#fffbeb">$${(totN*tauxEff).toFixed(2)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    
+    <div style="margin-top: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+      <div class="card" style="padding: 16px; background: var(--surface2); border: 1px solid var(--border); margin: 0;">
+        <div style="font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .05em;">1. Net Versé (Ex: $105.00)</div>
+        <p style="font-size: 12.5px; margin-top: 6px; color: var(--text2); line-height: 1.4;">C'est le montant réel transféré par la clinique (Tarif Brut minus les 30% de frais de gestion interne).</p>
+      </div>
+      <div class="card" style="padding: 16px; background: #fffbeb; border: 1px solid #fde68a; margin: 0;">
+        <div style="font-size: 11px; font-weight: 600; color: var(--warning); text-transform: uppercase; letter-spacing: .05em;">2. Provision Impôt (Ex: $42.00)</div>
+        <p style="font-size: 12.5px; margin-top: 6px; color: var(--text2); line-height: 1.4;">40% du Net Versé à épargner immédiatement pour la fin d'année (Couvre l'Impôt QC, Fédéral, QPP autonome, RQAP, FSS).</p>
+      </div>
+      <div class="card" style="padding: 16px; background: #f0fdf4; border: 1px solid #bbf7d0; margin: 0;">
+        <div style="font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .05em;">3. Revenu Disponible (Ex: $63.00)</div>
+        <p style="font-size: 12.5px; margin-top: 6px; color: var(--text2); line-height: 1.4;">Argent net disponible à 100% pour usage personnel, libre de toute dette ou obligation fiscale future.</p>
+      </div>
+    </div>
+  `;
 }
 
 function exportFacture() {
@@ -1330,7 +1366,6 @@ function exportFacture() {
   const moisStr=`${MOIS[m-1]} ${y}`;
   const numF=`${String(m).padStart(2,'0')}-${String(y).slice(-2)}`;
   
-  // Ordenamiento cronológico explícito
   const sess=sessions.filter(s=>s.Mois===moisStr).sort((a,b)=>normalizeDate(a.Date_Session).localeCompare(normalizeDate(b.Date_Session)));
   
   if(!sess.length){toast('⚠️ Aucune session','warning');return;}
@@ -1340,6 +1375,7 @@ function exportFacture() {
   const totF=sess.reduce((a,s)=>a+Number(s.Frais),0);
   const totN=sess.reduce((a,s)=>a+Number(s.Net),0);
   const pct=cfg.pct||30;
+  
   const sessionRows=sess.map((s,i)=>{
     const bg=i%2===0?'#ffffff':'#fafafa';
     return `<tr style="background:${bg}">
@@ -1348,31 +1384,34 @@ function exportFacture() {
       <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11pt;text-align:right;color:#333">$${Number(s.Tarif).toFixed(2)}</td>
       <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11pt;text-align:right;color:#c0392b">$${Number(s.Frais).toFixed(2)}</td>
       <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11pt;text-align:right;font-weight:bold;color:#1a1a1a">$${Number(s.Net).toFixed(2)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11pt;color:#666">${s.Notes||''}</td>
     </tr>`;
   }).join('');
+  
   const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
 <head><meta charset="UTF-8"><style>body{font-family:Calibri,Arial,sans-serif}table{border-collapse:collapse;width:100%}td{vertical-align:top}</style></head>
-<body><table style="width:720px;margin:0 auto;font-family:Calibri,Arial,sans-serif">
-<tr><td colspan="5" style="height:20px"></td></tr>
+<body><table style="width:780px;margin:0 auto;font-family:Calibri,Arial,sans-serif">
+<tr><td colspan="6" style="height:20px"></td></tr>
 <tr>
-  <td colspan="3" style="padding:0 12px"><div style="font-size:32pt;font-weight:bold;color:#111;line-height:1">FACTURE</div><div style="font-size:10pt;color:#888;margin-top:2px;text-transform:uppercase;letter-spacing:1px">Services professionnels en psychologie</div></td>
+  <td colspan="4" style="padding:0 12px"><div style="font-size:32pt;font-weight:bold;color:#111;line-height:1">FACTURE</div><div style="font-size:10pt;color:#888;margin-top:2px;text-transform:uppercase;letter-spacing:1px">Services professionnels en psychologie</div></td>
   <td colspan="2" style="padding:0 12px;text-align:right;vertical-align:bottom"><div style="font-size:18pt;font-weight:bold;color:#111">N° ${numF}</div><div style="font-size:10pt;color:#888">Date : ${dateStr}</div></td>
 </tr>
-<tr><td colspan="5" style="padding:10px 12px 0"><div style="border-top:2px solid #111;width:100%"></div></td></tr>
-<tr><td colspan="5" style="height:16px"></td></tr>
+<tr><td colspan="6" style="padding:10px 12px 0"><div style="border-top:2px solid #111;width:100%"></div></td></tr>
+<tr><td colspan="6" style="height:16px"></td></tr>
 <tr>
-  <td colspan="3" style="padding:0 12px"><div style="font-size:7.5pt;font-weight:bold;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Professionnel</div><div style="font-size:12pt;font-weight:bold;color:#111">${cfg.nomPro||''}</div><div style="font-size:9pt;color:#666;margin-top:2px">${cfg.titrePro||''}</div></td>
+  <td colspan="4" style="padding:0 12px"><div style="font-size:7.5pt;font-weight:bold;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Professionnel</div><div style="font-size:12pt;font-weight:bold;color:#111">${cfg.nomPro||''}</div><div style="font-size:9pt;color:#666;margin-top:2px">${cfg.titrePro||''}</div></td>
   <td colspan="2" style="padding:0 12px;text-align:right"><div style="font-size:7.5pt;font-weight:bold;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Période</div><div style="font-size:12pt;font-weight:bold;color:#111">${MOIS[m-1]} ${y}</div></td>
 </tr>
-<tr><td colspan="5" style="height:16px"></td></tr>
-<tr><td colspan="5" style="padding:0 12px"><div style="font-size:7.5pt;font-weight:bold;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Destinataire</div><div style="font-size:12pt;font-weight:bold;color:#111">${cfg.nomClinique||''}</div><div style="font-size:9.5pt;color:#555;margin-top:2px">${cfg.adresse||''}</div><div style="font-size:9.5pt;color:#555">${cfg.tel||''}</div></td></tr>
-<tr><td colspan="5" style="height:24px"></td></tr>
+<tr><td colspan="6" style="height:16px"></td></tr>
+<tr><td colspan="6" style="padding:0 12px"><div style="font-size:7.5pt;font-weight:bold;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Destinataire</div><div style="font-size:12pt;font-weight:bold;color:#111">${cfg.nomClinique||''}</div><div style="font-size:9.5pt;color:#555;margin-top:2px">${cfg.adresse||''}</div><div style="font-size:9.5pt;color:#555">${cfg.tel||''}</div></td></tr>
+<tr><td colspan="6" style="height:24px"></td></tr>
 <tr style="background:#f2f2f2">
   <td style="padding:9px 12px;font-size:8.5pt;font-weight:bold;color:#444;border-top:1.5px solid #111;border-bottom:1.5px solid #111">DATE</td>
   <td style="padding:9px 12px;font-size:8.5pt;font-weight:bold;color:#444;border-top:1.5px solid #111;border-bottom:1.5px solid #111">CLIENT</td>
   <td style="padding:9px 12px;font-size:8.5pt;font-weight:bold;color:#444;text-align:right;border-top:1.5px solid #111;border-bottom:1.5px solid #111">TARIF</td>
   <td style="padding:9px 12px;font-size:8.5pt;font-weight:bold;color:#444;text-align:right;border-top:1.5px solid #111;border-bottom:1.5px solid #111">FRAIS (${pct}%)</td>
   <td style="padding:9px 12px;font-size:8.5pt;font-weight:bold;color:#444;text-align:right;border-top:1.5px solid #111;border-bottom:1.5px solid #111">NET</td>
+  <td style="padding:9px 12px;font-size:8.5pt;font-weight:bold;color:#444;border-top:1.5px solid #111;border-bottom:1.5px solid #111">DESCRIPTION / NOTES</td>
 </tr>
 ${sessionRows}
 <tr>
@@ -1380,14 +1419,16 @@ ${sessionRows}
   <td style="padding:10px 12px;font-size:11pt;font-weight:bold;text-align:right;color:#111;border-top:2px solid #111;border-bottom:1px solid #111">$${totT.toFixed(2)}</td>
   <td style="padding:10px 12px;font-size:11pt;font-weight:bold;text-align:right;color:#c0392b;border-top:2px solid #111;border-bottom:1px solid #111">$${totF.toFixed(2)}</td>
   <td style="padding:10px 12px;font-size:12pt;font-weight:bold;text-align:right;color:#111;border-top:2px solid #111;border-bottom:1px solid #111">$${totN.toFixed(2)}</td>
+  <td style="padding:10px 12px;border-top:2px solid #111;border-bottom:1px solid #111"></td>
 </tr>
-<tr><td colspan="5" style="height:48px"></td></tr>
+<tr><td colspan="6" style="height:48px"></td></tr>
 <tr>
-  <td colspan="2" style="padding:0 12px"></td>
+  <td colspan="3" style="padding:0 12px"></td>
   <td colspan="3" style="padding:0 12px;text-align:center"><div style="border-top:1px solid #999;padding-top:6px"><div style="font-size:8.5pt;color:#999">Signature du professionnel</div><div style="font-size:9pt;color:#555;margin-top:4px">${cfg.nomPro||''}</div></div></td>
 </tr>
-<tr><td colspan="5" style="height:30px"></td></tr>
+<tr><td colspan="6" style="height:30px"></td></tr>
 </table></body></html>`;
+  
   const blob=new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -1653,25 +1694,81 @@ function loadResume() {
     document.getElementById('depEconomieCard').style.display='none';
   }
 
-  // ── CALENDAR VIEW CALL ──
   renderCalendar(m, y);
+
+  const totalSessionsMois = sessMois.length;
+  const netMoisReel = sessMois.reduce((a,s)=>a+Number(s.Net),0);
+  const impuestoMoisProporcional = netMoisReel * tauxEff;
+  const disponibleMoisReal = netMoisReel - impuestoMoisProporcional;
+  
+  const tasaHorariaEfectiva = totalSessionsMois > 0 ? (disponibleMoisReal / totalSessionsMois) : 0;
+  const costoOperativoEstimadoMes = 250; 
+  const sesionesPuntoEquilibrio = Math.ceil(costoOperativoEstimadoMes / 105);
+  const porcentajePuntoEquilibrio = totalSessionsMois > 0 ? Math.min(100, Math.round((totalSessionsMois / sesionesPuntoEquilibrio) * 100)) : 0;
 
   const freq={};
   sessMois.forEach(s=>{const k=`${s.Prénom||''} ${s.Nom||s.Client||''}`.trim();freq[k]=(freq[k]||0)+1;});
   const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  document.getElementById('topClients').innerHTML=sorted.length
-    ? sorted.map(([name,count],i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
-        <div class="flex aic gap8"><span style="width:22px;height:22px;background:var(--accent-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent)">${i+1}</span><span>${name}</span></div>
-        <span class="badge badge-green">${count} sess.</span></div>`).join('')
+  
+  document.getElementById('topClients').innerHTML = sorted.length
+    ? sorted.map(([name,count],i)=>{
+        const pctCliente = Math.round((count / totalSessionsMois) * 100);
+        return `<div style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+            <span class="flex aic gap8">
+              <span style="width:20px;height:20px;background:var(--accent-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent)">${i+1}</span>
+              <span>${name}</span>
+            </span>
+            <span><strong>${count}</strong> sess. (${pctCliente}%)</span>
+          </div>
+          <div style="background:var(--border);border-radius:99px;height:5px">
+            <div style="background:var(--accent2);border-radius:99px;height:5px;width:${pctCliente}%"></div>
+          </div>
+        </div>`;
+      }).join('')
     : '<div class="empty" style="padding:28px 0"><div class="txt-sm">Aucune donnée ce mois</div></div>';
 
   const tarifs={};
   sessMois.forEach(s=>{tarifs[`$${s.Tarif}`]=(tarifs[`$${s.Tarif}`]||0)+1;});
-  document.getElementById('tarifBreak').innerHTML=Object.entries(tarifs).sort().map(([t,c])=>{
+  
+  let tarifasHTML = Object.entries(tarifs).sort().map(([t,c])=>{
     const pct2=Math.round(c/sessMois.length*100);
-    return `<div style="margin-bottom:18px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span>Tarif ${t}</span><span><strong>${c}</strong> sess. (${pct2}%)</span></div>
-    <div style="background:var(--border);border-radius:99px;height:8px"><div style="background:var(--accent);border-radius:99px;height:8px;width:${pct2}%;transition:width .4s"></div></div></div>`;
-  }).join('')||'<div class="empty" style="padding:28px 0"><div class="txt-sm">Aucune donnée ce mois</div></div>';
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px">
+        <span>Tarif ${t} (Brut)</span>
+        <span><strong>${c}</strong> sess. (${pct2}%)</span>
+      </div>
+      <div style="background:var(--border);border-radius:99px;height:6px">
+        <div style="background:var(--accent);border-radius:99px;height:6px;width:${pct2}%;"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('tarifBreak').innerHTML = `
+    <div style="margin-bottom: 20px;">
+      ${tarifasHTML || '<div class="txt-sm txt-muted">Aucune session ce mois</div>'}
+    </div>
+    <div style="border-top: 1px solid var(--border); padding-top:16px;">
+      <div style="font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom:12px;">Métriques d'Efficience Clinique</div>
+      <div class="flex jsb aic mb16" style="background: var(--surface2); padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border)">
+        <div>
+          <div style="font-size: 12px; font-weight:600; color: var(--text)">Valeur nette par heure</div>
+          <div style="font-size: 11px; color: var(--text3)">Après frais clinique & impôts</div>
+        </div>
+        <div style="font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--accent)">$${tasaHorariaEfectiva.toFixed(2)}/h</div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+          <span style="font-weight:600">Seuil de Rentabilité Fijo ($250/mois)</span>
+          <span>${totalSessionsMois}/${sesionesPuntoEquilibrio} sess.</span>
+        </div>
+        <div style="background:var(--border);border-radius:99px;height:8px; margin-bottom:4px;">
+          <div style="background:${porcentajePuntoEquilibrio >= 100 ? 'var(--accent)' : 'var(--warning)'};border-radius:99px;height:8px;width:${porcentajePuntoEquilibrio}%; transition: width 0.4s;"></div>
+        </div>
+        <div style="font-size:11px; color: var(--text3)">${porcentajePuntoEquilibrio >= 100 ? '✅ Coûts fixes mensuels couverts' : '⏳ En progression pour couvrir les frais'}</div>
+      </div>
+    </div>
+  `;
 }
 
 // ════════════════════════════════════════════════════════
@@ -1897,7 +1994,7 @@ function simuler() {
   </div>`;
 
   const msgs = [];
-  if(patients < 15) msgs.push({icon:'📈', txt:'<b>Moins de 15 patients/sem :</b> marge de croissance importante. Chaque patient supplémentaire ajoute $'+(prix*(1-pctClin)*(1-fiscal.pct/100)*semaines).toFixed(0)+'/an net.'});
+  if(patients < 15) msgs.push({icon:'📈', txt:'<b>Moins de 15 patients/sem :</b> marge de croissance importante. Cada paciente adicional añade $'+(prix*(1-pctClin)*(1-fiscal.pct/100)*semaines).toFixed(0)+'/an net.'});
   else if(patients <= 20) msgs.push({icon:'✅', txt:'<b>Zone optimale (15-20 patients/sem) :</b> bon équilibre revenu / charge clinique.'});
   else msgs.push({icon:'⚠️', txt:'<b>Plus de 20 patients/sem :</b> attention à la fatigue de compassion. Le $/heure effectif tend à baisser après 20 patients.'});
 

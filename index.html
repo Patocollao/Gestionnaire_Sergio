@@ -416,7 +416,11 @@ tbody td { padding: 11px 15px; }
           </optgroup>
         </select>
       </div>
-      <div class="fg"><label class="fl">Montant total payé ($)</label><input type="number" class="fc" id="dAmount" min="0" step="0.01" placeholder="85.50" oninput="updateDepPreview()"></div>
+      <div class="fg">
+        <label class="fl">Montant total payé (TPS/TVQ incluses) ($)</label>
+        <input type="number" class="fc" id="dAmount" min="0" step="0.01" placeholder="85.50" oninput="updateDepPreview()">
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">💡 Inscrivez le montant total du reçu (taxes incluses)</div>
+      </div>
       <div class="fg" id="pctDeductionGroup" style="display:none">
         <label class="fl">% usage professionnel</label>
         <select class="fc" id="dPctDeduction" onchange="updateDepPreview()">
@@ -1754,8 +1758,10 @@ function loadResume() {
   document.getElementById('tarifBreak').innerHTML = `
     <div style="font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; margin-bottom:12px;">Activité et Absences</div>
     ${trendData.map(t => {
-      const pctAbs = t.total > 0 ? (t.abs / t.total) * 100 : 0;
-      const pctPres = t.total > 0 ? ((t.total - t.abs) / t.total) * 100 : 100;
+      const maxSessions = 100; // Tope realista para un psicólogo
+      const pctTotal = Math.min((t.total / maxSessions) * 100, 100); // % sobre el tope de 100
+      const pctPresBar = t.total > 0 ? ((t.total - t.abs) / maxSessions) * 100 : 0;
+      const pctAbsBar = t.total > 0 ? (t.abs / maxSessions) * 100 : 0;
       return `
         <div style="margin-bottom:14px; ${t.isCurrent ? 'background:var(--surface2); padding:8px; border-radius:6px; border:1px solid var(--accent-light)' : ''}">
           <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:2px">
@@ -1763,8 +1769,8 @@ function loadResume() {
             <span style="color:var(--text2)">${t.total} sess. ${t.abs > 0 ? `<span style="color:var(--danger); font-weight:700">(${t.abs} abs)</span>` : ''}</span>
           </div>
           <div style="display:flex; height:6px; border-radius:99px; overflow:hidden; background:var(--border)">
-            <div style="background:var(--accent2); width:${pctPres}%" title="Présences"></div>
-            <div style="background:var(--danger); width:${pctAbs}%" title="Absences"></div>
+            <div style="background:var(--accent2); width:${pctPresBar}%" title="Présences: ${t.total - t.abs}"></div>
+            <div style="background:var(--danger); width:${pctAbsBar}%" title="Absences: ${t.abs}"></div>
           </div>
         </div>
       `;

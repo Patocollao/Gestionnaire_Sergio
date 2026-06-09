@@ -1064,7 +1064,7 @@ async function callScript(action,data={}) {
   if(action==='uploadReceipt'){
     const resp=await fetch(cfg.scriptUrl,{
       method:'POST',redirect:'follow',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({action,...data})
     });
     if(!resp.ok) throw new Error('Erreur réseau: '+resp.status);

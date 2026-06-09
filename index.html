@@ -231,6 +231,8 @@ tbody td { padding: 11px 15px; }
 .receipt-dl{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:rgba(16,185,129,.12);color:var(--accent);text-decoration:none;margin-left:4px;white-space:nowrap;}
 .receipt-dl:hover{background:rgba(16,185,129,.22);}
 .receipt-missing{font-size:11px;color:var(--warning,#f59e0b);}
+.btn-lier-recu{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:#f59e0b;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.btn-lier-recu:hover{background:rgba(245,158,11,.22);}
 </style>
 <!-- Tesseract.js OCR — gratuit, 100% navigateur -->
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -1678,7 +1680,7 @@ function renderDepenses() {
     <tbody>${exp.map(e=>{
       const pct=e.pctDed??100,amtD=e.amountDed??0,amtT=e.amountTotal??0;
       // Construire le chip du reçu
-      let receiptCell='<span class="receipt-missing">— sans reçu</span>';
+      let receiptCell='<button class="btn-lier-recu" onclick="ouvrirLierRecu(\''+e.id+'\',\''+e.date+'\')">📎 Lier reçu</button>';
       if(e.receiptUrl){
         const parts=e.date?e.date.split('-'):[];
         const label=parts.length>=2?MOIS_FR[parseInt(parts[1],10)-1]+'-'+(parts[2]||''):'Reçu';
@@ -2328,6 +2330,146 @@ function toast(msg,type='success'){
   clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>{el.style.transform='translateX(-50%) translateY(80px)';el.style.opacity='0';},3500);
 }
+
+// ════════════════════════════════════════════════════════
+//  LIER REÇU — Modal pour dépenses existantes
+// ════════════════════════════════════════════════════════
+let lierRecuDepId   = null;
+let lierRecuDepDate = null;
+let lierRecuFile    = null;
+
+function ouvrirLierRecu(id, date) {
+  lierRecuDepId   = id;
+  lierRecuDepDate = date;
+  lierRecuFile    = null;
+  // Trouver infos de la dépense
+  const dep = depenses.find(d=>String(d.id)===String(id));
+  const info = dep ? `${fmtDate(dep.date)} · ${dep.category} · $${(dep.amountTotal||0).toFixed(2)}` : id;
+  document.getElementById('lierRecuInfo').textContent = info;
+  document.getElementById('lierRecuZoneInner').style.display='';
+  document.getElementById('lierRecuPreview').innerHTML='';
+  document.getElementById('lierRecuStatus').innerHTML='';
+  document.getElementById('lierRecuInput').value='';
+  const modal = document.getElementById('lierRecuModal');
+  modal.style.display='flex';
+}
+
+function fermerLierRecu() {
+  document.getElementById('lierRecuModal').style.display='none';
+  lierRecuFile=null; lierRecuDepId=null; lierRecuDepDate=null;
+}
+
+function handleLierRecuDrop(event) {
+  event.preventDefault();
+  document.getElementById('lierRecuDropzone').classList.remove('drag');
+  handleLierRecuFile(event.dataTransfer.files?.[0]);
+}
+
+function handleLierRecuFile(file) {
+  if(!file) return;
+  lierRecuFile = file;
+  const isImg = file.type.startsWith('image/');
+  const sz = file.size < 1024*1024 ? (file.size/1024).toFixed(0)+' KB' : (file.size/1024/1024).toFixed(1)+' MB';
+  document.getElementById('lierRecuZoneInner').style.display='none';
+  document.getElementById('lierRecuPreview').innerHTML=`
+    <div class="receipt-preview">
+      <div class="pdf-icon">${isImg?'🖼️':'📄'}</div>
+      <div class="rinfo"><div class="rname">${file.name}</div><div class="rsize">${sz}</div></div>
+      <button class="receipt-clear" onclick="lierRecuFile=null;document.getElementById('lierRecuZoneInner').style.display='';document.getElementById('lierRecuPreview').innerHTML='';document.getElementById('lierRecuInput').value=''">✕</button>
+    </div>`;
+  if(isImg) runOCRForLier(file);
+}
+
+function runOCRForLier(file) {
+  const st = document.getElementById('lierRecuStatus');
+  st.innerHTML='<span class="ocr-badge running">⏳ Analyse OCR…</span>';
+  Tesseract.recognize(file,'fra+eng',{logger:()=>{}}).then(({data})=>{
+    const ext = parseOCRText(data.text||'');
+    let msg='✅ OCR terminé';
+    if(ext.amount) msg+=` · Montant: $${ext.amount}`;
+    st.innerHTML=`<span class="ocr-badge done">${msg}</span>`;
+  }).catch(()=>{
+    st.innerHTML='<span class="ocr-badge fail">OCR non disponible — fichier sera lié tel quel</span>';
+  });
+}
+
+async function sauvegarderLierRecu() {
+  if(!lierRecuFile){toast('⚠️ Sélectionnez un fichier','warning');return;}
+  if(!cfg.driveFolderId){toast('⚠️ ID dossier Drive non configuré','warning');return;}
+  if(!cfg.scriptUrl){toast('⚠️ Script non configuré','warning');return;}
+
+  const btn = document.getElementById('lierRecuSaveBtn');
+  btn.textContent='⏳ Envoi…'; btn.disabled=true;
+
+  try {
+    toast('☁️ Envoi du reçu vers Drive…','info');
+    const base64 = await fileToBase64(lierRecuFile);
+    const ext = lierRecuFile.name.split('.').pop()||'jpg';
+    const safeName = (lierRecuDepDate||'').replace(/-/g,'')+'_recu.'+ext;
+
+    await fetch(cfg.scriptUrl,{
+      method:'POST',redirect:'follow',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({
+        action:'updateDepenseReceipt',
+        id: lierRecuDepId,
+        base64, mimeType: lierRecuFile.type,
+        fileName: safeName,
+        date: lierRecuDepDate,
+        folderId: cfg.driveFolderId
+      })
+    }).catch(()=>{});
+
+    toast('⏳ Synchronisation…','info');
+    await new Promise(r=>setTimeout(r,2000));
+    const fresh = await callScript('getDepenses');
+    depenses=(fresh.data||[]).map(e=>({
+      ...e,id:e.id||e.Id||'',
+      date:normalizeDate(e.date||e.Date||''),
+      category:e.category||e.Categorie||'',
+      pctDed:Number(e.pctDed||e.PctDed)||100,
+      amountTotal:Number(e.amountTotal||e.MontantTotal)||0,
+      amountDed:Number(e.amountDed||e.MontantDed)||0,
+      notes:e.notes||e.Notes||'',
+      receiptUrl:e.receiptUrl||e.ReceiptUrl||''
+    }));
+    renderDepenses();
+    fermerLierRecu();
+    toast('✅ Reçu lié avec succès !');
+  } catch(e){
+    toast('❌ '+e.message,'error');
+  } finally {
+    btn.textContent='💾 Sauvegarder'; btn.disabled=false;
+  }
+}
 </script>
+
+<!-- ── Modal Lier Reçu ── -->
+<div id="lierRecuModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:440px;max-width:95vw">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="font-weight:700;font-size:15px">📎 Lier un reçu à cette dépense</div>
+      <button onclick="fermerLierRecu()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px">✕</button>
+    </div>
+    <div id="lierRecuInfo" style="font-size:12px;color:var(--text3);margin-bottom:14px;background:var(--surface2);padding:8px 12px;border-radius:8px"></div>
+    <div class="receipt-zone" id="lierRecuDropzone"
+         ondragover="event.preventDefault();this.classList.add('drag')"
+         ondragleave="this.classList.remove('drag')"
+         ondrop="handleLierRecuDrop(event)">
+      <input type="file" id="lierRecuInput" accept="image/*,application/pdf" onchange="handleLierRecuFile(this.files[0])">
+      <div id="lierRecuZoneInner">
+        <div style="font-size:22px;margin-bottom:4px">📷</div>
+        <div style="font-size:12px;font-weight:600">Photo ou PDF de la facture</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">Cliquez ou glissez le fichier ici</div>
+      </div>
+    </div>
+    <div id="lierRecuPreview" style="margin-top:8px"></div>
+    <div id="lierRecuStatus" style="margin-top:6px"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
+      <button class="btn btn-outline" onclick="fermerLierRecu()">Annuler</button>
+      <button class="btn btn-primary" id="lierRecuSaveBtn" onclick="sauvegarderLierRecu()">💾 Sauvegarder</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

@@ -1602,24 +1602,67 @@ async function saveDepense() {
   if(catType==='mixed'){pctDed=parseInt(document.getElementById('dPctDeduction').value)||100;amountDed=round2(totalAmt*pctDed/100);}
   else if(catType==='50'){pctDed=50;amountDed=round2(totalAmt*0.5);}
 
-  // Upload du reçu si présent
-  let receiptUrl='';
-  if(pendingReceiptFile && cfg.driveFolderId && !isDemo && cfg.scriptUrl){
-    try {
-      toast('☁️ Envoi du reçu vers Drive…','info');
-      receiptUrl = await uploadReceiptToDrive(pendingReceiptFile, date);
-    } catch(e){ toast('⚠️ Reçu non envoyé: '+e.message,'warning'); }
-  }
+  const dep={id:'d'+Date.now(),date,category:catLabel,pctDed,amountTotal:totalAmt,amountDed,notes:v('dNotes'),receiptUrl:''};
 
-  const dep={id:'d'+Date.now(),date,category:catLabel,pctDed,amountTotal:totalAmt,amountDed,notes:v('dNotes'),receiptUrl};
   try {
-    if(isDemo||!cfg.scriptUrl){depenses.push(dep);toast('✅ Dépense enregistrée (démo)');}
-    else{const res=await callScript('addDepense',dep);dep.id=res.id||dep.id;depenses.push(dep);toast(`✅ Dépense sauvegardée — $${amountDed.toFixed(2)} déductibles`);}
-    document.getElementById('dAmount').value=''; document.getElementById('dNotes').value='';
+    if(isDemo||!cfg.scriptUrl){
+      depenses.push(dep);
+      toast('✅ Dépense enregistrée (démo)');
+    } else if(pendingReceiptFile && cfg.driveFolderId) {
+      // ── Flux avec reçu : upload + dépense en un seul POST ──
+      toast('☁️ Envoi du reçu et sauvegarde…','info');
+      const base64 = await fileToBase64(pendingReceiptFile);
+      const ext = pendingReceiptFile.name.split('.').pop()||'jpg';
+      const safeName = date.replace(/-/g,'')+'-'+(v('dNotes')||'recu').replace(/[^a-zA-Z0-9]/g,'_').substring(0,20)+'.'+ext;
+      // POST combiné — on ne peut pas lire la réponse (CORS), mais le script exécute tout
+      await fetch(cfg.scriptUrl, {
+        method:'POST', redirect:'follow',
+        headers:{'Content-Type':'text/plain'},
+        body: JSON.stringify({
+          action:'addDepenseWithReceipt',
+          ...dep,
+          base64, mimeType: pendingReceiptFile.type,
+          fileName: safeName, folderId: cfg.driveFolderId
+        })
+      }).catch(()=>{}); // ignorer erreur CORS sur la réponse
+      // Sync après 2s pour récupérer les données avec le fileId
+      toast('⏳ Synchronisation…','info');
+      await new Promise(r=>setTimeout(r,2000));
+      const fresh = await callScript('getDepenses');
+      depenses = (fresh.data||[]).map(e=>({
+        ...e, id:e.id||e.Id||'',
+        date:normalizeDate(e.date||e.Date||''),
+        category:e.category||e.Categorie||'',
+        pctDed:Number(e.pctDed||e.PctDed)||100,
+        amountTotal:Number(e.amountTotal||e.MontantTotal)||0,
+        amountDed:Number(e.amountDed||e.MontantDed)||0,
+        notes:e.notes||e.Notes||'',
+        receiptUrl:e.receiptUrl||e.ReceiptUrl||''
+      }));
+      toast(`✅ Dépense + reçu sauvegardés — $${amountDed.toFixed(2)} déductibles`);
+    } else {
+      // ── Flux sans reçu : GET normal ──
+      const res=await callScript('addDepense',dep);
+      dep.id=res.id||dep.id;
+      depenses.push(dep);
+      toast(`✅ Dépense sauvegardée — $${amountDed.toFixed(2)} déductibles`);
+    }
+    document.getElementById('dAmount').value='';
+    document.getElementById('dNotes').value='';
     document.getElementById('depDeductionBox').classList.remove('visible');
     clearReceiptZone();
     renderDepenses();
   } catch(e){toast('❌ '+e.message,'error');}
+}
+
+// Convertir fichier en base64 (sans le préfixe data:...)
+function fileToBase64(file) {
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=e=>res(e.target.result.split(',')[1]);
+    r.onerror=()=>rej(new Error('Lecture fichier impossible'));
+    r.readAsDataURL(file);
+  });
 }
 
 function renderDepenses() {

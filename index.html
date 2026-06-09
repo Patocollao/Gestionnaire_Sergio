@@ -209,7 +209,31 @@ tbody td { padding: 11px 15px; }
   .cal-day-count { font-size: 9px; padding: 1px 4px; }
   .cal-stats { grid-template-columns: 1fr; }
 }
+
+/* ── Reçu / Upload ── */
+.receipt-zone{border:2px dashed var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;}
+.receipt-zone:hover,.receipt-zone.drag{border-color:var(--accent);background:rgba(16,185,129,.06);}
+.receipt-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.receipt-preview{display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:8px;padding:10px 12px;margin-top:8px;}
+.receipt-preview img{width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--border);}
+.receipt-preview .pdf-icon{width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--surface);border-radius:6px;border:1px solid var(--border);}
+.receipt-preview .rinfo{flex:1;min-width:0;}
+.receipt-preview .rname{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.receipt-preview .rsize{font-size:11px;color:var(--text3);}
+.receipt-clear{background:none;border:none;color:var(--danger);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px;}
+.receipt-clear:hover{background:rgba(239,68,68,.1);}
+.ocr-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:12px;margin-top:6px;}
+.ocr-badge.running{background:rgba(245,158,11,.15);color:#f59e0b;}
+.ocr-badge.done{background:rgba(16,185,129,.15);color:var(--accent);}
+.ocr-badge.fail{background:rgba(239,68,68,.12);color:var(--danger);}
+.receipt-link{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:rgba(59,130,246,.15);color:#60a5fa;text-decoration:none;white-space:nowrap;}
+.receipt-link:hover{background:rgba(59,130,246,.25);}
+.receipt-dl{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:rgba(16,185,129,.12);color:var(--accent);text-decoration:none;margin-left:4px;white-space:nowrap;}
+.receipt-dl:hover{background:rgba(16,185,129,.22);}
+.receipt-missing{font-size:11px;color:var(--warning,#f59e0b);}
 </style>
+<!-- Tesseract.js OCR — gratuit, 100% navigateur -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 
@@ -416,11 +440,7 @@ tbody td { padding: 11px 15px; }
           </optgroup>
         </select>
       </div>
-      <div class="fg">
-        <label class="fl">Montant total payé (TPS/TVQ incluses) ($)</label>
-        <input type="number" class="fc" id="dAmount" min="0" step="0.01" placeholder="85.50" oninput="updateDepPreview()">
-        <div style="font-size:11px;color:var(--text3);margin-top:4px">💡 Inscrivez le montant total du reçu (taxes incluses)</div>
-      </div>
+      <div class="fg"><label class="fl">Montant total payé ($)</label><input type="number" class="fc" id="dAmount" min="0" step="0.01" placeholder="85.50" oninput="updateDepPreview()"></div>
       <div class="fg" id="pctDeductionGroup" style="display:none">
         <label class="fl">% usage professionnel</label>
         <select class="fc" id="dPctDeduction" onchange="updateDepPreview()">
@@ -440,6 +460,27 @@ tbody td { padding: 11px 15px; }
       </div>
       <div id="repasNote" style="display:none"><div class="alert alert-warning">🍽️ Repas d'affaires : limité à <strong>50%</strong> selon Revenu Québec.</div></div>
       <div class="fg"><label class="fl">Description (optionnel)</label><input type="text" class="fc" id="dNotes" placeholder="Ex: Renouvellement OPQ..."></div>
+
+      <!-- ─── REÇU ─── -->
+      <div class="fg">
+        <label class="fl">📎 Joindre un reçu (optionnel)</label>
+        <div class="receipt-zone" id="receiptDropzone"
+             ondragover="event.preventDefault();this.classList.add('drag')"
+             ondragleave="this.classList.remove('drag')"
+             ondrop="handleReceiptDrop(event)">
+          <input type="file" id="receiptFileInput" accept="image/*,application/pdf"
+                 onchange="handleReceiptFile(this.files[0])">
+          <div id="receiptZoneInner">
+            <div style="font-size:22px;margin-bottom:4px">📷</div>
+            <div style="font-size:12px;font-weight:600">Photo ou PDF de la facture</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:3px">Cliquez ou glissez le fichier ici</div>
+          </div>
+        </div>
+        <div id="receiptPreviewZone" style="display:none"></div>
+        <div id="ocrStatus"></div>
+      </div>
+      <!-- ─────────── -->
+
       <button class="btn btn-primary btn-full" onclick="saveDepense()">💾 Ajouter la dépense</button>
     </div>
     <div class="card">
@@ -571,7 +612,7 @@ tbody td { padding: 11px 15px; }
     <p><strong>Feuille "Sessions"</strong> — Colonnes (A à I) :</p>
     <pre>Date_Session | Prénom | Nom | Tarif | Frais | Net | Mois | Facture | Notes</pre>
     <p><strong>Feuille "Depenses"</strong> — Colonnes (A à G) :</p>
-    <pre>id | date | category | pctDed | amountTotal | amountDed | notes</pre>
+    <pre>id | date | category | pctDed | amountTotal | amountDed | notes | receiptUrl</pre>
     <h4>Apps Script v4</h4>
     <p>Collez le code <strong>Code_Apps_Script_v4.js</strong> dans Extensions → Apps Script. Créez un <strong>Nouveau déploiement</strong> → App web → Accès : Tous les utilisateurs. Copiez l'URL dans ⚙️ Config.</p>
     <h4>Mise à jour du script</h4>
@@ -755,6 +796,11 @@ tbody td { padding: 11px 15px; }
     <div class="alert alert-warning">⚠️ Collez l'URL de votre Google Apps Script.</div>
     <div class="fg"><label class="fl">URL Web App</label><input class="fc" id="cScriptUrl" placeholder="https://script.google.com/macros/s/XXXX/exec"></div>
     <button class="btn btn-outline btn-full" style="margin-top:4px" onclick="testGoogleScript()">🔌 Tester la connexion</button>
+  </div>
+  <div class="cfg-sec">
+    <div class="cfg-sec-title">☁️ Google Drive — Reçus</div>
+    <div class="alert alert-info" style="font-size:12px">📁 Ouvrez votre dossier racine dans Drive → copiez l'ID depuis l'URL :<br><span style="color:var(--text3);font-size:11px">drive.google.com/drive/folders/<strong style="color:var(--accent)">1BxiMVs0XRA5...</strong></span></div>
+    <div class="fg"><label class="fl">ID du dossier racine</label><input class="fc" id="cDriveFolderId" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74"></div>
   </div>
   <div class="cfg-sec">
     <div class="cfg-sec-title">💡 Mode démo</div>
@@ -979,6 +1025,7 @@ function openConfig() {
   document.getElementById('cTel').value=cfg.tel||'';
   document.getElementById('cPct').value=cfg.pct||30;
   document.getElementById('cScriptUrl').value=cfg.scriptUrl||'';
+  document.getElementById('cDriveFolderId').value=cfg.driveFolderId||'';
   document.getElementById('cDemo').checked=!!cfg.demo;
   document.getElementById('cfgModal').classList.add('open');
 }
@@ -986,7 +1033,7 @@ function openConfig() {
 function saveConfig() {
   cfg.nomPro=v('cNomPro'); cfg.titrePro=v('cTitrePro'); cfg.nomClinique=v('cNomClinique');
   cfg.adresse=v('cAdresse'); cfg.tel=v('cTel'); cfg.pct=parseFloat(v('cPct'))||30;
-  cfg.scriptUrl=v('cScriptUrl'); cfg.demo=document.getElementById('cDemo').checked;
+  cfg.scriptUrl=v('cScriptUrl'); cfg.driveFolderId=v('cDriveFolderId').trim(); cfg.demo=document.getElementById('cDemo').checked;
   localStorage.setItem('clinique360_cfg',JSON.stringify(cfg));
   closeModal('cfgModal'); updatePctUI(); updatePreview();
   toast('✅ Configuration sauvegardée');
@@ -1013,6 +1060,18 @@ function updatePctUI() {
 
 async function callScript(action,data={}) {
   if(!cfg.scriptUrl) throw new Error('URL du script non configurée');
+  // Pour uploadReceipt (base64 volumineux) → POST
+  if(action==='uploadReceipt'){
+    const resp=await fetch(cfg.scriptUrl,{
+      method:'POST',redirect:'follow',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action,...data})
+    });
+    if(!resp.ok) throw new Error('Erreur réseau: '+resp.status);
+    const text=await resp.text();
+    try { const json=JSON.parse(text); if(json.error) throw new Error(json.error); return json; }
+    catch(e){ throw new Error('Réponse invalide du script.'); }
+  }
   const url=cfg.scriptUrl+'?action='+action+'&data='+encodeURIComponent(JSON.stringify(data));
   const resp=await fetch(url,{redirect:'follow'});
   if(!resp.ok) throw new Error('Erreur réseau: '+resp.status);
@@ -1041,7 +1100,8 @@ async function syncData() {
       pctDed:      Number(e.pctDed || e.PctDed) || 100,
       amountTotal: Number(e.amountTotal || e.MontantTotal) || 0,
       amountDed:   Number(e.amountDed || e.MontantDed) || 0,
-      notes:       e.notes || e.Notes || ''
+      notes:       e.notes || e.Notes || '',
+      receiptUrl:  e.receiptUrl || e.ReceiptUrl || ''
     }));
     renderClientTable(); loadTodaySessions(); updateClientCount(); renderDepenses();
     const now=new Date();
@@ -1541,12 +1601,23 @@ async function saveDepense() {
   let pctDed=100,amountDed=totalAmt;
   if(catType==='mixed'){pctDed=parseInt(document.getElementById('dPctDeduction').value)||100;amountDed=round2(totalAmt*pctDed/100);}
   else if(catType==='50'){pctDed=50;amountDed=round2(totalAmt*0.5);}
-  const dep={id:'d'+Date.now(),date,category:catLabel,pctDed,amountTotal:totalAmt,amountDed,notes:v('dNotes')};
+
+  // Upload du reçu si présent
+  let receiptUrl='';
+  if(pendingReceiptFile && cfg.driveFolderId && !isDemo && cfg.scriptUrl){
+    try {
+      toast('☁️ Envoi du reçu vers Drive…','info');
+      receiptUrl = await uploadReceiptToDrive(pendingReceiptFile, date);
+    } catch(e){ toast('⚠️ Reçu non envoyé: '+e.message,'warning'); }
+  }
+
+  const dep={id:'d'+Date.now(),date,category:catLabel,pctDed,amountTotal:totalAmt,amountDed,notes:v('dNotes'),receiptUrl};
   try {
     if(isDemo||!cfg.scriptUrl){depenses.push(dep);toast('✅ Dépense enregistrée (démo)');}
     else{const res=await callScript('addDepense',dep);dep.id=res.id||dep.id;depenses.push(dep);toast(`✅ Dépense sauvegardée — $${amountDed.toFixed(2)} déductibles`);}
     document.getElementById('dAmount').value=''; document.getElementById('dNotes').value='';
     document.getElementById('depDeductionBox').classList.remove('visible');
+    clearReceiptZone();
     renderDepenses();
   } catch(e){toast('❌ '+e.message,'error');}
 }
@@ -1558,17 +1629,29 @@ function renderDepenses() {
   if(!exp.length){el.innerHTML='<div class="empty"><div class="empty-ico">💳</div><div class="txt-sm">Aucune dépense cette année</div></div>';return;}
   const totDed=exp.reduce((a,e)=>a+(e.amountDed||0),0);
   const totBrut=exp.reduce((a,e)=>a+(e.amountTotal||0),0);
+  const MOIS_FR=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
   el.innerHTML=`<div class="tw"><table>
-    <thead><tr><th>Date</th><th>Catégorie</th><th>Description</th><th>Payé</th><th>%</th><th>Déductible</th><th></th></tr></thead>
+    <thead><tr><th>Date</th><th>Catégorie</th><th>Description</th><th>Payé</th><th>%</th><th>Déductible</th><th>Reçu 📎</th><th></th></tr></thead>
     <tbody>${exp.map(e=>{
       const pct=e.pctDed??100,amtD=e.amountDed??0,amtT=e.amountTotal??0;
+      // Construire le chip du reçu
+      let receiptCell='<span class="receipt-missing">— sans reçu</span>';
+      if(e.receiptUrl){
+        const parts=e.date?e.date.split('-'):[];
+        const label=parts.length>=2?MOIS_FR[parseInt(parts[1],10)-1]+'-'+(parts[2]||''):'Reçu';
+        const fileId=e.receiptUrl; // on stocke le fileId dans receiptUrl
+        const viewUrl=`https://drive.google.com/file/d/${fileId}/view?usp=sharing`;
+        const dlUrl=`https://drive.google.com/uc?export=download&id=${fileId}`;
+        receiptCell=`<a class="receipt-link" href="${viewUrl}" target="_blank" title="Voir le reçu">📎 ${label}</a><a class="receipt-dl" href="${dlUrl}" target="_blank" title="Télécharger">⬇</a>`;
+      }
       return `<tr><td>${fmtDate(e.date)}</td><td><span class="badge badge-purple" style="white-space:normal;max-width:160px;display:inline-block;line-height:1.4">${e.category}</span></td>
       <td>${e.notes||'—'}</td><td class="fw6">$${amtT.toFixed(2)}</td>
       <td><span class="pct-pill${pct===100?' pct-pill-100':''}">${pct}%</span></td>
       <td class="fw6 c-green">$${amtD.toFixed(2)}</td>
+      <td style="white-space:nowrap">${receiptCell}</td>
       <td><button class="btn btn-danger" onclick="deleteDepense('${e.id}')">✕</button></td></tr>`;
     }).join('')}</tbody>
-    <tfoot><tr><td class="tfoot" colspan="3">TOTAL ${y}</td><td class="tfoot">$${totBrut.toFixed(2)}</td><td class="tfoot"></td><td class="tfoot c-green">$${totDed.toFixed(2)}</td><td class="tfoot"></td></tr></tfoot>
+    <tfoot><tr><td class="tfoot" colspan="3">TOTAL ${y}</td><td class="tfoot">$${totBrut.toFixed(2)}</td><td class="tfoot"></td><td class="tfoot c-green">$${totDed.toFixed(2)}</td><td class="tfoot" colspan="2"></td></tr></tfoot>
   </table></div>
   <div class="alert alert-success" style="margin-top:12px">💰 <strong>Économie d'impôt estimée :</strong> ≈ $${(totDed*0.36).toFixed(0)} (TMI ~36%)</div>`;
 }
@@ -1579,6 +1662,139 @@ async function deleteDepense(id) {
     if(!isDemo&&cfg.scriptUrl) await callScript('deleteDepense',{id});
     depenses=depenses.filter(e=>String(e.id)!==String(id)); renderDepenses(); toast('🗑️ Dépense supprimée');
   } catch(e){toast('❌ '+e.message,'error');}
+}
+
+// ════════════════════════════════════════════════════════
+//  REÇU — Upload, OCR, Drive
+// ════════════════════════════════════════════════════════
+let pendingReceiptFile = null;
+
+function handleReceiptDrop(event) {
+  event.preventDefault();
+  document.getElementById('receiptDropzone').classList.remove('drag');
+  const file = event.dataTransfer.files?.[0];
+  if(file) handleReceiptFile(file);
+}
+
+function handleReceiptFile(file) {
+  if(!file) return;
+  pendingReceiptFile = file;
+  const isImg = file.type.startsWith('image/');
+  const isPdf = file.type === 'application/pdf';
+  if(!isImg && !isPdf){ toast('⚠️ Format non supporté (image ou PDF)','warning'); return; }
+
+  // Masquer la zone de drop, afficher la preview
+  document.getElementById('receiptZoneInner').style.display='none';
+  const sz = file.size < 1024*1024 ? (file.size/1024).toFixed(0)+' KB' : (file.size/1024/1024).toFixed(1)+' MB';
+  let thumbHtml = isPdf
+    ? `<div class="pdf-icon">📄</div>`
+    : `<img id="receiptThumb" src="" alt="preview">`;
+
+  document.getElementById('receiptPreviewZone').style.display='';
+  document.getElementById('receiptPreviewZone').innerHTML=`
+    <div class="receipt-preview">
+      ${thumbHtml}
+      <div class="rinfo">
+        <div class="rname">${file.name}</div>
+        <div class="rsize">${sz} · ${isPdf?'PDF':'Image'}</div>
+      </div>
+      <button class="receipt-clear" onclick="clearReceiptZone()" title="Retirer">✕</button>
+    </div>`;
+
+  if(isImg){
+    const reader = new FileReader();
+    reader.onload = e => { const th = document.getElementById('receiptThumb'); if(th) th.src=e.target.result; };
+    reader.readAsDataURL(file);
+  }
+
+  // Lancer l'OCR automatiquement si image
+  if(isImg) runOCR(file);
+}
+
+function clearReceiptZone() {
+  pendingReceiptFile = null;
+  document.getElementById('receiptZoneInner').style.display='';
+  document.getElementById('receiptPreviewZone').style.display='none';
+  document.getElementById('receiptPreviewZone').innerHTML='';
+  document.getElementById('ocrStatus').innerHTML='';
+  document.getElementById('receiptFileInput').value='';
+}
+
+async function runOCR(file) {
+  const st = document.getElementById('ocrStatus');
+  st.innerHTML='<span class="ocr-badge running">⏳ Analyse OCR en cours…</span>';
+  try {
+    const { data } = await Tesseract.recognize(file, 'fra+eng', { logger: ()=>{} });
+    const text = data.text || '';
+    const extracted = parseOCRText(text);
+    applyOCRData(extracted);
+    let msg = '✅ OCR terminé';
+    if(extracted.amount) msg += ` · Montant détecté: $${extracted.amount}`;
+    if(extracted.date)   msg += ` · Date: ${extracted.date}`;
+    st.innerHTML=`<span class="ocr-badge done">${msg}</span>`;
+  } catch(e) {
+    st.innerHTML='<span class="ocr-badge fail">⚠️ OCR échoué — saisie manuelle</span>';
+  }
+}
+
+function parseOCRText(text) {
+  const result = {};
+  // Montant: cherche patterns comme $84.50, 84,50 $, 84.50
+  const amtMatch = text.match(/\$?\s*(\d{1,4}[.,]\d{2})\s*\$?/);
+  if(amtMatch) result.amount = amtMatch[1].replace(',','.');
+
+  // Date: YYYY-MM-DD ou DD/MM/YYYY ou DD-MM-YYYY
+  const dateMatch = text.match(/(\d{4}[-\/]\d{2}[-\/]\d{2})|(\d{2}[-\/]\d{2}[-\/]\d{4})/);
+  if(dateMatch){
+    let raw = dateMatch[0];
+    if(raw.match(/^\d{2}/)){
+      const parts = raw.split(/[-\/]/);
+      result.date = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+    } else { result.date = raw.replace(/\//g,'-'); }
+  }
+
+  // Description: première ligne non vide significative
+  const lines = text.split('\n').map(l=>l.trim()).filter(l=>l.length>4&&!/^\d+$/.test(l));
+  if(lines.length) result.desc = lines[0].substring(0,60);
+
+  return result;
+}
+
+function applyOCRData(extracted) {
+  if(extracted.amount){
+    const inp = document.getElementById('dAmount');
+    if(!inp.value) { inp.value = extracted.amount; updateDepPreview(); }
+  }
+  if(extracted.date){
+    const inp = document.getElementById('dDate');
+    if(!inp.value || inp.value === todayStr()) inp.value = extracted.date;
+  }
+  if(extracted.desc){
+    const inp = document.getElementById('dNotes');
+    if(!inp.value) inp.value = extracted.desc;
+  }
+}
+
+async function uploadReceiptToDrive(file, date) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const base64 = e.target.result.split(',')[1];
+        const mimeType = file.type;
+        const ext = file.name.split('.').pop() || 'jpg';
+        const safeName = date.replace(/-/g,'') + '_' + (v('dNotes')||'recu').replace(/[^a-zA-Z0-9]/g,'_').substring(0,20) + '.' + ext;
+        const res = await callScript('uploadReceipt', {
+          base64, mimeType, fileName: safeName,
+          date, folderId: cfg.driveFolderId
+        });
+        if(res && res.fileId) resolve(res.fileId);
+        else reject(new Error(res?.error || 'Upload échoué'));
+      } catch(err) { reject(err); }
+    };
+    reader.onerror = () => reject(new Error('Lecture fichier impossible'));
+    reader.readAsDataURL(file);
+  });
 }
 
 // ════════════════════════════════════════════════════════
@@ -1710,28 +1926,20 @@ function loadResume() {
   const sesionesPuntoEquilibrio = Math.ceil(costoOperativoEstimadoMes / 105);
   const porcentajePuntoEquilibrio = totalSessionsMois > 0 ? Math.min(100, Math.round((totalSessionsMois / sesionesPuntoEquilibrio) * 100)) : 0;
 
-  const clientStats = {};
-  sessMois.forEach(s => {
-    const name = `${s.Prénom || ''} ${s.Nom || s.Client || ''}`.trim();
-    if (!clientStats[name]) clientStats[name] = { count: 0, lastDate: s.Date_Session };
-    clientStats[name].count++;
-    if (s.Date_Session > clientStats[name].lastDate) clientStats[name].lastDate = s.Date_Session;
-  });
-  const sortedClients = Object.entries(clientStats).sort((a, b) => b[1].count - a[1].count).slice(0, 5);
+  const freq={};
+  sessMois.forEach(s=>{const k=`${s.Prénom||''} ${s.Nom||s.Client||''}`.trim();freq[k]=(freq[k]||0)+1;});
+  const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5);
   
-  document.getElementById('topClients').innerHTML = sortedClients.length
-    ? sortedClients.map(([name, data], i) => {
-        const pctCliente = Math.round((data.count / totalSessionsMois) * 100);
+  document.getElementById('topClients').innerHTML = sorted.length
+    ? sorted.map(([name,count],i)=>{
+        const pctCliente = Math.round((count / totalSessionsMois) * 100);
         return `<div style="margin-bottom:12px">
-          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:4px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
             <span class="flex aic gap8">
               <span style="width:20px;height:20px;background:var(--accent-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent)">${i+1}</span>
               <span>${name}</span>
             </span>
-            <span style="text-align:right">
-              <strong>${data.count}</strong> sess. (${pctCliente}%)<br>
-              <span style="font-size:11px;color:var(--text3)">Dernière: ${fmtDate(data.lastDate)}</span>
-            </span>
+            <span><strong>${count}</strong> sess. (${pctCliente}%)</span>
           </div>
           <div style="background:var(--border);border-radius:99px;height:5px">
             <div style="background:var(--accent2);border-radius:99px;height:5px;width:${pctCliente}%"></div>
@@ -1740,41 +1948,46 @@ function loadResume() {
       }).join('')
     : '<div class="empty" style="padding:28px 0"><div class="txt-sm">Aucune donnée ce mois</div></div>';
 
-  // ── ACTIVIDAD MENSUAL (Evolución ± 3 meses) ──
-  const trendData = [];
-  for (let i = -3; i <= 3; i++) {
-    let d = new Date(y, m - 1 + i, 1);
-    let mesKey = `${MOIS[d.getMonth()]} ${d.getFullYear()}`;
-    let tSess = sessions.filter(s => s.Mois === mesKey);
-    let tAbs = tSess.filter(s => s.Notes && s.Notes.toLowerCase().includes('absence')).length;
-    trendData.push({
-      label: `${MOIS[d.getMonth()].substring(0, 3)} ${d.getFullYear()}`,
-      total: tSess.length,
-      abs: tAbs,
-      isCurrent: (i === 0)
-    });
-  }
+  const tarifs={};
+  sessMois.forEach(s=>{tarifs[`$${s.Tarif}`]=(tarifs[`$${s.Tarif}`]||0)+1;});
+  
+  let tarifasHTML = Object.entries(tarifs).sort().map(([t,c])=>{
+    const pct2=Math.round(c/sessMois.length*100);
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px">
+        <span>Tarif ${t} (Brut)</span>
+        <span><strong>${c}</strong> sess. (${pct2}%)</span>
+      </div>
+      <div style="background:var(--border);border-radius:99px;height:6px">
+        <div style="background:var(--accent);border-radius:99px;height:6px;width:${pct2}%;"></div>
+      </div>
+    </div>`;
+  }).join('');
 
   document.getElementById('tarifBreak').innerHTML = `
-    <div style="font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; margin-bottom:12px;">Activité et Absences</div>
-    ${trendData.map(t => {
-      const maxSessions = 100; // Tope realista para un psicólogo
-      const pctTotal = Math.min((t.total / maxSessions) * 100, 100); // % sobre el tope de 100
-      const pctPresBar = t.total > 0 ? ((t.total - t.abs) / maxSessions) * 100 : 0;
-      const pctAbsBar = t.total > 0 ? (t.abs / maxSessions) * 100 : 0;
-      return `
-        <div style="margin-bottom:14px; ${t.isCurrent ? 'background:var(--surface2); padding:8px; border-radius:6px; border:1px solid var(--accent-light)' : ''}">
-          <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:2px">
-            <span style="font-weight:${t.isCurrent ? '700' : '500'}">${t.label}</span>
-            <span style="color:var(--text2)">${t.total} sess. ${t.abs > 0 ? `<span style="color:var(--danger); font-weight:700">(${t.abs} abs)</span>` : ''}</span>
-          </div>
-          <div style="display:flex; height:6px; border-radius:99px; overflow:hidden; background:var(--border)">
-            <div style="background:var(--accent2); width:${pctPresBar}%" title="Présences: ${t.total - t.abs}"></div>
-            <div style="background:var(--danger); width:${pctAbsBar}%" title="Absences: ${t.abs}"></div>
-          </div>
+    <div style="margin-bottom: 20px;">
+      ${tarifasHTML || '<div class="txt-sm txt-muted">Aucune session ce mois</div>'}
+    </div>
+    <div style="border-top: 1px solid var(--border); padding-top:16px;">
+      <div style="font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom:12px;">Métriques d'Efficience Clinique</div>
+      <div class="flex jsb aic mb16" style="background: var(--surface2); padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border)">
+        <div>
+          <div style="font-size: 12px; font-weight:600; color: var(--text)">Valeur nette par heure</div>
+          <div style="font-size: 11px; color: var(--text3)">Après frais clinique & impôts</div>
         </div>
-      `;
-    }).join('')}
+        <div style="font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--accent)">$${tasaHorariaEfectiva.toFixed(2)}/h</div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+          <span style="font-weight:600">Seuil de Rentabilité Fijo ($250/mois)</span>
+          <span>${totalSessionsMois}/${sesionesPuntoEquilibrio} sess.</span>
+        </div>
+        <div style="background:var(--border);border-radius:99px;height:8px; margin-bottom:4px;">
+          <div style="background:${porcentajePuntoEquilibrio >= 100 ? 'var(--accent)' : 'var(--warning)'};border-radius:99px;height:8px;width:${porcentajePuntoEquilibrio}%; transition: width 0.4s;"></div>
+        </div>
+        <div style="font-size:11px; color: var(--text3)">${porcentajePuntoEquilibrio >= 100 ? '✅ Coûts fixes mensuels couverts' : '⏳ En progression pour couvrir les frais'}</div>
+      </div>
+    </div>
   `;
 }
 

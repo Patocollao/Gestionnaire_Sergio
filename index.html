@@ -1316,7 +1316,11 @@ async function deleteSession(i){
     if(mainIdx>=0) sessions.splice(mainIdx,1);
     toast('🗑️ Session supprimée');
     loadTodaySessions();
-  }catch(e){if(mainIdx>=0)sessions.splice(mainIdx,1);loadTodaySessions();toast('🗑️ Session supprimée');}
+  }catch(e){
+    // Erreur réelle — NE PAS modifier l'état local
+    toast('❌ Échec suppression : '+e.message,'error');
+    try{const fr=await callScript('getSessions');sessions=fr.data||[];loadTodaySessions();}catch(e2){}
+  }
 }
 
 // ════════════════════════════════════════════════════════

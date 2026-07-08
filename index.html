@@ -1062,24 +1062,29 @@ function updatePctUI() {
 
 async function callScript(action,data={}) {
   if(!cfg.scriptUrl) throw new Error('URL du script non configurée');
-  // Pour uploadReceipt (base64 volumineux) → POST
-  if(action==='uploadReceipt'){
+  let text;
+  // POST : pour les actions avec payload volumineux
+  const POST_ACTIONS=['uploadReceipt','addDepenseWithReceipt','updateDepenseReceipt'];
+  if(POST_ACTIONS.includes(action)){
     const resp=await fetch(cfg.scriptUrl,{
       method:'POST',redirect:'follow',
       headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({action,...data})
     });
     if(!resp.ok) throw new Error('Erreur réseau: '+resp.status);
-    const text=await resp.text();
-    try { const json=JSON.parse(text); if(json.error) throw new Error(json.error); return json; }
-    catch(e){ throw new Error('Réponse invalide du script.'); }
+    text=await resp.text();
+  } else {
+    const url=cfg.scriptUrl+'?action='+action+'&data='+encodeURIComponent(JSON.stringify(data));
+    const resp=await fetch(url,{redirect:'follow'});
+    if(!resp.ok) throw new Error('Erreur réseau: '+resp.status);
+    text=await resp.text();
   }
-  const url=cfg.scriptUrl+'?action='+action+'&data='+encodeURIComponent(JSON.stringify(data));
-  const resp=await fetch(url,{redirect:'follow'});
-  if(!resp.ok) throw new Error('Erreur réseau: '+resp.status);
-  const text=await resp.text();
-  try { const json=JSON.parse(text); if(json.error) throw new Error(json.error); return json; }
-  catch(e) { throw new Error('Réponse invalide du script.'); }
+  // Séparer l'erreur de parsing JSON de l'erreur retournée par le script
+  let json;
+  try { json=JSON.parse(text); }
+  catch(e){ throw new Error('Réponse invalide du script'); }
+  if(json.error) throw new Error(json.error);
+  return json;
 }
 
 async function syncData() {

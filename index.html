@@ -1287,8 +1287,9 @@ async function saveEditSession(){
   const todaySess=sessions.filter(s=>normalizeDate(s.Date_Session)===selDate);
   const s=todaySess[editingSessionIdx];
   if(!s){toast('❌ Session introuvable','error');return;}
-  const mainIdx=sessions.findIndex(ms=>normalizeDate(ms.Date_Session)===selDate&&ms.Prénom===s.Prénom&&ms.Nom===s.Nom&&String(ms.Tarif)===String(s.Tarif));
-  if(mainIdx<0){toast('❌ Session introuvable','error');return;}
+  // indexOf(s) — referencia exacta en memoria, evita colisión entre duplicados
+  const mainIdx=sessions.indexOf(s);
+  if(mainIdx<0){toast('❌ Session introuvable en mémoire','error');return;}
   const p=cfg.pct||30,frais=round2(newTarif*p/100),net=round2(newTarif-frais);
   const parts=newDate.split('-'),mois=MOIS[parseInt(parts[1])-1]+' '+parts[0];
   const facture=String(parseInt(parts[1])).padStart(2,'0')+'-'+parts[0].slice(-2);
@@ -1298,7 +1299,7 @@ async function saveEditSession(){
   try{
     if(isDemo||!cfg.scriptUrl){sessions[mainIdx]=updated;toast('✅ Session modifiée (démo)');}
     else{
-      await callScript('deleteSession',{date:normalizeDate(s.Date_Session),prenom:s.Prénom,nom:s.Nom,tarif:String(s.Tarif)});
+      await callScript('deleteSession',{date:normalizeDate(s.Date_Session),prenom:s.Prénom,nom:s.Nom,tarif:String(s.Tarif),mois:s.Mois||'',notes:s.Notes||''});
       await callScript('addSession',updated);
       sessions[mainIdx]=updated;
       toast('✅ Session modifiée');
@@ -1315,15 +1316,24 @@ async function deleteSession(i){
   const s=todaySess[i];
   if(!s) return;
   if(!confirm('Supprimer la session de '+(s.Prénom||'')+' '+(s.Nom||'')+' ($'+s.Tarif+') ?')) return;
-  const mainIdx=sessions.findIndex(ms=>normalizeDate(ms.Date_Session)===selDate&&ms.Prénom===s.Prénom&&ms.Nom===s.Nom&&String(ms.Tarif)===String(s.Tarif));
+  // indexOf(s) — referencia exacta en memoria, evita colisión entre duplicados
+  const mainIdx=sessions.indexOf(s);
+  // Bloquear botón para evitar doble clic (race condition)
+  const btns=document.querySelectorAll('#todayList .btn-danger');
+  let btnBackup='';
+  if(btns[i]){btnBackup=btns[i].innerHTML;btns[i].disabled=true;btns[i].innerHTML='<span class="spin" style="width:11px;height:11px;border-width:2px;border-top-color:var(--danger)"></span>';}
   try{
-    if(!isDemo&&cfg.scriptUrl) await callScript('deleteSession',{date:normalizeDate(s.Date_Session),prenom:s.Prénom,nom:s.Nom,tarif:String(s.Tarif)});
+    if(!isDemo&&cfg.scriptUrl) await callScript('deleteSession',{
+      date:normalizeDate(s.Date_Session),prenom:s.Prénom,nom:s.Nom,
+      tarif:String(s.Tarif),mois:s.Mois||'',notes:s.Notes||''
+    });
     if(mainIdx>=0) sessions.splice(mainIdx,1);
     toast('🗑️ Session supprimée');
     loadTodaySessions();
   }catch(e){
-    // Erreur réelle — NE PAS modifier l'état local
-    toast('❌ Échec suppression : '+e.message,'error');
+    console.error('[deleteSession]',e.message);
+    toast('❌ '+e.message.substring(0,150),'error');
+    if(btns[i]){btns[i].disabled=false;btns[i].innerHTML=btnBackup;}
     try{const fr=await callScript('getSessions');sessions=fr.data||[];loadTodaySessions();}catch(e2){}
   }
 }
